@@ -1,135 +1,67 @@
+%%writefile app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import requests
 import io
 
-# 1. إعدادات الصفحة الأساسية
 st.set_page_config(page_title="لوحة تحكم المشروع", page_icon="📊", layout="wide")
 
-# 2. إعدادات CSS لدعم اللغة العربية
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
-    * { font-family: 'Tajawal', sans-serif; }
-    .block-container { direction: rtl; }
+    .block-container { direction: rtl; font-family: sans-serif; }
     h1, h2, h3, h4, h5, h6, p, div { text-align: right; }
-    .stMetric { background-color: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
+    .stMetric { background-color: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 لوحة القيادة التنفيذية - مشروع استيراد المعدات (Live)")
+st.title("📊 لوحة القيادة التنفيذية - مشروع استيراد المعدات")
 st.markdown("---")
 
-# 3. دالة سحب البيانات من OneDrive مباشرة
-@st.cache_data(ttl=30) # النظام سيقوم بتحديث نفسه كل 30 ثانية لاستقطاب أي أرقام جديدة
-def load_data_from_onedrive():
-    # الرابط الذي أرسلته
-    onedrive_url = "https://1drv.ms/x/c/89cd6b455d2cc55f/IQBrnOctkqQvR5vFKR5YuOV0AXLmiorWTvbIypfkkIpVpJk"
-    
+@st.cache_data(ttl=30)
+def load_data():
+    # الرابط مع إضافة أمر التحميل وتخطي الحماية
+    url = "https://1drv.ms/x/c/89cd6b455d2cc55f/IQBrnOctkqQvR5vFKR5YuOV0AXLmiorWTvbIypfkkIpVpJk?download=1"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'}
     try:
-        # تتبع الرابط وتحويله لرابط تحميل مباشر يقرأه النظام
-        session = requests.Session()
-        response = session.head(onedrive_url, allow_redirects=True)
-        direct_url = response.url.split('?')[0] + "?download=1"
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
         
-        # تحميل محتوى الملف إلى الذاكرة
-        file_response = requests.get(direct_url)
-        file_response.raise_for_status() # التأكد من عدم وجود خطأ في الاتصال
-        file_bytes = io.BytesIO(file_response.content)
-        
-        # قراءة الشيتات
-        df_partners = pd.read_excel(file_bytes, sheet_name='سجل الشركاء')
-        df_inventory = pd.read_excel(file_bytes, sheet_name='سجل المخزون')
-        df_sales = pd.read_excel(file_bytes, sheet_name='سجل المبيعات')
-        
+        df_partners = pd.read_excel(response.content, sheet_name='سجل الشركاء')
+        df_inventory = pd.read_excel(response.content, sheet_name='سجل المخزون')
+        df_sales = pd.read_excel(response.content, sheet_name='سجل المبيعات')
         return df_partners, df_inventory, df_sales
-        
     except Exception as e:
-        st.error(f"⚠️ تعذر قراءة الملف من OneDrive. يرجى التأكد من أن الرابط يعمل وصلاحيته (Anyone with the link). التفاصيل: {e}")
+        st.error(f"⚠️ خطأ في الاتصال بملف الإكسيل: {e}")
         return None, None, None
 
-df_partners, df_inventory, df_sales = load_data_from_onedrive()
+df_partners, df_inventory, df_sales = load_data()
 
 if df_partners is not None:
-    # تنظيف بيانات المبيعات لتجاهل الصفوف الفارغة
     df_sales_clean = df_sales[pd.to_numeric(df_sales['سعر البيع النهائي'], errors='coerce') > 0]
 
-    # ==========================================
-    # 4. قسم المؤشرات المالية العلوية (KPIs)
-    # ==========================================
     total_capital = 287550
     total_collected = df_partners['المسدد (SAR)'].sum()
     total_remaining = total_capital - total_collected
-    
     total_sales = df_sales_clean['سعر البيع النهائي'].sum() if not df_sales_clean.empty else 0
     total_profit = df_sales_clean['ربح الشركاء الصافي'].sum() if not df_sales_clean.empty else 0
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("💰 إجمالي رأس المال المطلوب", f"{total_capital:,.0f} ر.س")
-    with col2:
-        st.metric("✅ إجمالي المحصل من الشركاء", f"{total_collected:,.0f} ر.س", f"إنجاز {(total_collected/total_capital)*100:.1f}%")
-    with col3:
-        st.metric("⏳ العجز المتبقي للتحصيل", f"{total_remaining:,.0f} ر.س", "- مطلوب عاجلاً", delta_color="inverse")
-    with col4:
-        st.metric("📈 إجمالي المبيعات المحققة", f"{total_sales:,.0f} ر.س", f"صافي الربح: {total_profit:,.0f} ر.س")
+    with col1: st.metric("💰 إجمالي رأس المال", f"{total_capital:,.0f} ر.س")
+    with col2: st.metric("✅ إجمالي المحصل", f"{total_collected:,.0f} ر.س")
+    with col3: st.metric("⏳ العجز المتبقي", f"{total_remaining:,.0f} ر.س")
+    with col4: st.metric("📈 إجمالي المبيعات", f"{total_sales:,.0f} ر.س")
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
-
-    # ==========================================
-    # 5. قسم الرسوم البيانية التفاعلية
-    # ==========================================
+    st.markdown("<br>", unsafe_allow_html=True)
     col_chart1, col_chart2 = st.columns(2)
 
     with col_chart1:
         st.subheader("تحليل سداد الشركاء")
-        fig_partners = px.bar(
-            df_partners, 
-            x='اسم الشريك', 
-            y=['المسدد (SAR)', 'الرصيد المتبقي عليه (SAR)'],
-            color_discrete_map={'المسدد (SAR)': '#2E7D32', 'الرصيد المتبقي عليه (SAR)': '#D32F2F'},
-            labels={'value': 'المبلغ (ريال سعودي)', 'variable': 'الحالة المالية'}
-        )
-        fig_partners.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+        fig_partners = px.bar(df_partners, x='اسم الشريك', y=['المسدد (SAR)', 'الرصيد المتبقي عليه (SAR)'], color_discrete_map={'المسدد (SAR)': '#2E7D32', 'الرصيد المتبقي عليه (SAR)': '#D32F2F'})
         st.plotly_chart(fig_partners, use_container_width=True)
 
     with col_chart2:
-        st.subheader("حالة المخزون الفعلي بالمستودع")
+        st.subheader("حالة المخزون الفعلي")
         df_inv_filtered = df_inventory[pd.to_numeric(df_inventory['المخزون المتبقي'], errors='coerce') > 0]
-        fig_inv = px.pie(
-            df_inv_filtered, 
-            names='المعدة', 
-            values='المخزون المتبقي', 
-            hole=0.45,
-            color_discrete_sequence=px.colors.sequential.Teal
-        )
-        fig_inv.update_traces(textposition='inside', textinfo='percent+label')
+        fig_inv = px.pie(df_inv_filtered, names='المعدة', values='المخزون المتبقي', hole=0.45)
         st.plotly_chart(fig_inv, use_container_width=True)
-
-    # ==========================================
-    # 6. قسم الجداول التفصيلية
-    # ==========================================
-    st.markdown("---")
-    col_table1, col_table2 = st.columns(2)
-    
-    with col_table1:
-        st.subheader("📋 السجل المالي للشركاء")
-        formatted_partners = df_partners.style.format({
-            "المطلوب (SAR)": "{:,.0f}", 
-            "المسدد (SAR)": "{:,.0f}", 
-            "الرصيد المتبقي عليه (SAR)": "{:,.0f}",
-            "أرباحه من المبيعات (SAR)": "{:,.0f}"
-        })
-        st.dataframe(formatted_partners, use_container_width=True, hide_index=True)
-
-    with col_table2:
-        st.subheader("💰 أحدث عمليات البيع والعمولات")
-        if not df_sales_clean.empty:
-            formatted_sales = df_sales_clean[['التاريخ', 'المعدة المباعة', 'اسم المندوب', 'قيمة العمولة', 'سعر البيع النهائي']].style.format({
-                "قيمة العمولة": "{:,.0f}", 
-                "سعر البيع النهائي": "{:,.0f}"
-            })
-            st.dataframe(formatted_sales, use_container_width=True, hide_index=True)
-        else:
-            st.info("لم يتم تسجيل أي عمليات بيع حتى الآن في سجل المبيعات.")
