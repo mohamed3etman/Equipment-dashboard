@@ -2,8 +2,8 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import {
-  EvidenceRulesSchema, LexiconSchema, PersonaSchema, RubricSchema, ScenarioSchema,
-  type EvidenceRules, type Lexicon, type Persona, type Rubric, type Scenario,
+  EvidenceRulesSchema, LabelsSchema, LexiconSchema, PersonaSchema, RubricSchema, ScenarioSchema,
+  type EvidenceRules, type Labels, type Lexicon, type Persona, type Rubric, type Scenario,
 } from './schema';
 import type { Lang } from '@/lib/types';
 
@@ -31,6 +31,10 @@ function validate<T>(schema: { safeParse: (u: unknown) => { success: boolean; da
 
 export function loadLexicon(lang: Lang): Lexicon {
   return validate<Lexicon>(LexiconSchema, loadYaml(`lexicons/${lang}.v1.yaml`), `lexicon.${lang}`);
+}
+
+export function loadLabels(): Labels {
+  return validate<Labels>(LabelsSchema, loadYaml('labels.v1.yaml'), 'labels');
 }
 
 export function loadEvidenceRules(): EvidenceRules {

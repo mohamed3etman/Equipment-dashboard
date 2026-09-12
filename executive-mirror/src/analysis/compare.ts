@@ -8,6 +8,7 @@
  * than the speaker changing. (V2 §15, and the reason Tier C is not trended.)
  */
 import { BAND_RANK, type Band, type Evaluation, type Metric, type RetryObjective } from '@/lib/types';
+import { formatMetric } from '@/lib/format';
 import type { Pass0Result } from './metrics';
 
 export type Direction = 'improved' | 'regressed' | 'unchanged';
@@ -140,19 +141,19 @@ export function compareAttempts(
     if (moved && magnitude >= 25) {
       targetOutcome = {
         verdict: 'achieved',
-        explanation: `${target.label} moved from ${target.before}${target.unit} to ${target.after}${target.unit}.`,
+        explanation: `${target.label} moved from ${formatMetric(target.before, target.unit)} to ${formatMetric(target.after, target.unit)}.`,
         metric: target,
       };
     } else if (moved && magnitude >= NOISE_FLOOR_PCT) {
       targetOutcome = {
         verdict: 'partial',
-        explanation: `${target.label} moved in the right direction (${target.before}${target.unit} → ${target.after}${target.unit}) but by less than a quarter.`,
+        explanation: `${target.label} moved in the right direction (${formatMetric(target.before, target.unit)} → ${formatMetric(target.after, target.unit)}) but by less than a quarter.`,
         metric: target,
       };
     } else {
       targetOutcome = {
         verdict: 'not_achieved',
-        explanation: `${target.label} was ${target.before}${target.unit} and is now ${target.after}${target.unit} — no meaningful movement in the intended direction.`,
+        explanation: `${target.label} was ${formatMetric(target.before, target.unit)} and is now ${formatMetric(target.after, target.unit)} — no meaningful movement in the intended direction.`,
         metric: target,
       };
     }

@@ -1,0 +1,52 @@
+# Display labels. Config, not code, so Arabic is edited without a deploy
+# and new dimensions never appear untranslated. (V2 §28, §45.3-45.5)
+id: labels
+version: 1
+
+dimensions:
+  answer_fidelity:              { en: Answering the question, ar: الإجابة على السؤال }
+  conclusion_positioning:       { en: Leading with the answer, ar: تقديم الخلاصة }
+  conclusion_positioning_ar:    { en: Leading with the answer, ar: تقديم الخلاصة }
+  evidence_and_quantification:  { en: Evidence and numbers, ar: الدليل والأرقام }
+  ownership:                    { en: Personal ownership, ar: تحمّل المسؤولية }
+  compression:                  { en: Compression, ar: الإيجاز }
+  strategic_framing:            { en: Strategic framing, ar: التأطير الاستراتيجي }
+  decision_orientation:         { en: Landing on a decision, ar: الحسم واتخاذ القرار }
+  pressure_integrity:           { en: Holding up under pressure, ar: الثبات تحت الضغط }
+  pressure_integrity_ar:        { en: Holding up under pressure, ar: الثبات تحت الضغط }
+  hedging_control:              { en: Qualifier control, ar: ضبط التحفّظات }
+  technical_detail_control:     { en: Detail level, ar: مستوى التفصيل }
+  courtesy_vs_hedging:          { en: Courtesy vs self-weakening, ar: التهذيب مقابل الإضعاف }
+  hierarchy_awareness:          { en: Hierarchy awareness, ar: إدراك المقام }
+  register_consistency:         { en: Register consistency, ar: اتساق المستوى اللغوي }
+  code_switching:               { en: Language switching, ar: التناوب اللغوي }
+  # Executive Mirror perception dimensions
+  authority:                    { en: Authority, ar: الحضور القيادي }
+  confidence:                   { en: Confidence, ar: الثقة }
+  warmth:                       { en: Warmth, ar: الدفء }
+  assertiveness:                { en: Assertiveness, ar: الحزم }
+  strategic_thinking:           { en: Strategic thinking, ar: التفكير الاستراتيجي }
+  executive_maturity:           { en: Executive maturity, ar: النضج التنفيذي }
+  credibility:                  { en: Credibility, ar: المصداقية }
+  persuasion:                   { en: Persuasion, ar: الإقناع }
+  clarity:                      { en: Clarity, ar: الوضوح }
+  defensiveness:                { en: Defensiveness, ar: التموضع الدفاعي }
+
+seniority:
+  specialist:         { en: Specialist, ar: أخصائي }
+  manager:            { en: Manager, ar: مدير }
+  senior_manager:     { en: Senior Manager, ar: مدير أول }
+  director:           { en: Director, ar: مدير إدارة }
+  executive_director: { en: Executive Director, ar: مدير تنفيذي }
+  c_suite:            { en: C-Suite, ar: الإدارة العليا }
+
+tier_notes:
+  objective:
+    en: Measured directly from the audio and word timings. Same recording, same number, every time.
+    ar: مقاس مباشرة من الصوت وتوقيتات الكلمات. نفس التسجيل يعطي نفس الرقم في كل مرة.
+  semi_objective:
+    en: Counted by a rule. The rule is a judgment — its version is shown so you can check what it matched.
+    ar: محسوب بقاعدة. القاعدة اجتهاد — ورقم إصدارها معروض حتى تتحقق مما طابقته.
+  inferred:
+    en: An AI reading, not a measurement. Shown as a band with the words it is based on. Never trended across sessions.
+    ar: قراءة ذكاء اصطناعي وليست قياساً. تُعرض كمستوى مع الكلمات التي بُنيت عليها. ولا تُتتبع عبر الجلسات.

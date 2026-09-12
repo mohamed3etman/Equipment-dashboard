@@ -32,6 +32,7 @@
     "@types/ws": "^8.5.13",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.30.2",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",

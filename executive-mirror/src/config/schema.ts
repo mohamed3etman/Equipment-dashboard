@@ -191,3 +191,14 @@ export const PersonaSchema = z.object({
   voice: z.record(z.record(z.string())),
 });
 export type Persona = z.infer<typeof PersonaSchema>;
+
+const LabelPair = z.object({ en: z.string(), ar: z.string() });
+
+export const LabelsSchema = z.object({
+  id: z.literal('labels'),
+  version: z.number().int().positive(),
+  dimensions: z.record(LabelPair),
+  seniority: z.record(LabelPair),
+  tier_notes: z.record(LabelPair),
+});
+export type Labels = z.infer<typeof LabelsSchema>;
