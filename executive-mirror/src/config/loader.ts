@@ -46,6 +46,48 @@ export function loadRubric(ref: string): Rubric {
   return validate<Rubric>(RubricSchema, loadYaml(`${ref}.yaml`), ref);
 }
 
+/**
+ * Resolve `shared_with_en` into real dimensions.
+ *
+ * A non-English rubric lists the dimensions whose executive substance does not
+ * change with language (answer fidelity, quantification, ownership, …) rather
+ * than restating them. Until this function existed those ids were declared,
+ * validated, and then silently dropped — an Arabic session was evaluated on 6
+ * dimensions where an English one got 10, losing ownership, decision
+ * orientation and quantification entirely. The config looked complete and the
+ * evaluation was not.
+ *
+ * Language-specific dimensions always win: the Arabic rubric defines
+ * `conclusion_positioning_ar` precisely so the English `conclusion_positioning`
+ * threshold does NOT apply, so a shared id is only pulled in when neither it
+ * nor an `_ar` variant of it is already defined locally.
+ */
+export function resolveRubric(rubric: Rubric): Rubric {
+  const shared = rubric.shared_with_en;
+  if (!shared || shared.length === 0 || rubric.language === 'en') return rubric;
+
+  const base = loadRubric('rubrics/en/executive.v1');
+  const localIds = new Set(rubric.dimensions.map((d) => d.id));
+
+  const inherited = base.dimensions.filter((d) => {
+    if (!shared.includes(d.id)) return false;
+    if (localIds.has(d.id)) return false;                 // locally overridden
+    if (localIds.has(`${d.id}_${rubric.language}`)) return false; // language variant exists
+    return true;
+  });
+
+  const unknown = shared.filter(
+    (id) => !base.dimensions.some((d) => d.id === id) && !localIds.has(id),
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `Rubric ${rubric.id}.${rubric.language} declares shared_with_en ids that do not exist in the English rubric: ${unknown.join(', ')}`,
+    );
+  }
+
+  return { ...rubric, dimensions: [...rubric.dimensions, ...inherited] };
+}
+
 export function loadScenario(id: string, version = 1): Scenario {
   return validate<Scenario>(ScenarioSchema, loadYaml(`scenarios/${id}.v${version}.yaml`), `scenario.${id}`);
 }
@@ -81,7 +123,7 @@ export function loadSessionConfig(scenarioId: string, personaId: string, languag
   return {
     scenario,
     persona,
-    rubric: loadRubric(scenario.rubric[language]),
+    rubric: resolveRubric(loadRubric(scenario.rubric[language])),
     lexicon: loadLexicon(language),
     evidenceRules: loadEvidenceRules(),
     language,
