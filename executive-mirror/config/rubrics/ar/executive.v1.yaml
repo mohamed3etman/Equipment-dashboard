@@ -1,0 +1,273 @@
+id: executive
+language: ar
+version: 1
+status: developing        # V2 §3.3 — improved through validated examples, not assumed correct
+extends: shared/evidence-rules.v1
+label: معيار التواصل التنفيذي (العربية)
+
+# ============================================================================
+# THIS IS NOT A TRANSLATION OF THE ENGLISH RUBRIC. (V2 §3.3, §28)
+#
+# Dimensions that carry over unchanged are listed under `shared_with_en` and
+# reuse the English definitions. Everything below `dimensions` exists because
+# Arabic executive communication differs in ways an imported rubric gets wrong:
+#
+#   1. Courtesy and deference formulas are professional competence in GCC
+#      settings, not weakness. Penalising them would be a cultural error.
+#      What CAN weaken an answer is a formula that DELAYS or REPLACES content.
+#      The rubric must separate those two cases, which English has no need to do.
+#
+#   2. Conclusion-first is calibrated, not imported. Arabic professional
+#      discourse legitimately establishes shared context before the claim.
+#      The failure mode is not "context first" — it is context that never
+#      arrives at a claim.
+#
+#   3. English business terminology inside Arabic speech is NORMAL professional
+#      register in Saudi and Gulf workplaces. It is never penalised as such.
+#      It is flagged only where a precise, current Arabic term exists and the
+#      English substitution actually reduces clarity for the stated audience.
+#
+#   4. Register variety (MSA / Gulf / Egyptian) is a legitimate choice.
+#      The rubric evaluates CONSISTENCY and AUDIENCE FIT, not conformity to MSA.
+# ============================================================================
+
+shared_with_en:
+  # Judged with the English definitions; the linguistic surface differs but the
+  # executive substance does not.
+  - answer_fidelity
+  - evidence_and_quantification
+  - ownership
+  - compression
+  - strategic_framing
+  - decision_orientation
+  - technical_detail_control
+
+dimensions:
+  - id: conclusion_positioning_ar
+    label: هل قدّمت الخلاصة في وقت مناسب؟
+    label_en: Conclusion positioning (Arabic-calibrated)
+    pass: content
+    weight: critical
+    strong: >
+      الإجابة تصل إلى الموقف أو التوصية خلال أول جملتين إلى ثلاث جمل. التمهيد
+      القصير المُهيِّئ للسياق مقبول ومُقدَّر، بشرط أن يقود إلى خلاصة صريحة.
+    strong_en: >
+      The position or recommendation lands within the first two to three
+      sentences. A short context-setting preamble is accepted and valued —
+      provided it arrives at an explicit claim.
+    weakened_by:
+      - تمهيد يمتد لأكثر من ثلاث جمل قبل أي موقف واضح
+      - سرد زمني كامل قبل النتيجة
+      - انتهاء الإجابة دون خلاصة صريحة
+    weakened_by_en:
+      - Preamble running beyond three sentences before any clear position
+      - Full chronological narration before the outcome
+      - Answer ending with no explicit conclusion at all
+    calibration_note: >
+      Threshold is deliberately more permissive than the English rubric.
+      Do not flag a two-sentence contextual opening. Flag only where the
+      listener still cannot state the speaker's position after three sentences.
+
+  - id: courtesy_vs_hedging
+    label: التهذيب المهني مقابل الإضعاف
+    label_en: Professional courtesy vs self-weakening
+    pass: executive
+    weight: critical
+    strong: >
+      المجاملات والصيغ التوقيرية موجودة بالقدر الذي يبني العلاقة، ثم تُسلَّم
+      الإجابة بثقة ووضوح دون اعتذار عن الموقف.
+    strong_en: >
+      Deference and courtesy are present at the level that builds the
+      relationship, then the answer is delivered with confidence and clarity,
+      without apologising for holding a position.
+    # This distinction is the single most important Arabic-specific judgment.
+    never_penalise:
+      # Appropriate professional register. Flagging these would be a cultural error.
+      - سعادتكم
+      - حضرتكم
+      - معاليكم
+      - تفضلتم
+      - جزاكم الله خيراً
+      - أشكركم على السؤال
+      - اسمحوا لي
+    flag_only_when:
+      description: >
+        The same expressions become findings ONLY when they displace or delay
+        substance. The test is functional, never lexical.
+      conditions:
+        - id: delays_answer
+          test: Courtesy occupies more than roughly the first 15 seconds before any content
+        - id: replaces_position
+          test: A formula stands where a claim, number or recommendation was requested
+        - id: signals_retreat
+          test: Deference increases immediately after a challenge, where it was absent before
+        - id: apologetic_stack
+          test: Repeated apology for the answer itself, not for a genuine error
+    weakening_patterns:
+      # Flagged for the FUNCTION they perform, not for existing.
+      - pattern: "والله أعلم"
+        flag_when: closing a factual claim the speaker is qualified to make
+        why: reads as declining ownership of a judgment that was requested
+      - pattern: "إن شاء الله"
+        flag_when: substituted for a commitment, date or accountable answer
+        why: converts a commitment into an aspiration
+      - pattern: "ممكن يمكن ربما"
+        flag_when: stacked qualifiers on a single claim
+        why: compounding uncertainty on a defensible position
+      - pattern: "بصراحة"
+        flag_when: used repeatedly as filler rather than to mark a genuine candid turn
+      - pattern: "يعني"
+        flag_when: used as a discourse filler
+        why: high-frequency Arabic filler; counted deterministically in Pass 0
+
+  - id: hierarchy_awareness
+    label: إدراك التسلسل والمقام
+    label_en: Hierarchy and status awareness
+    pass: persona
+    weight: high
+    strong: >
+      مستوى الخطاب مناسب لمقام المستمع: احترام دون تصاغر، وثقة دون تجاوز.
+      يخاطب صاحب القرار بوصفه نظيراً في النقاش لا رئيساً يُسترضى.
+    strong_en: >
+      Register matches the listener's standing: respect without self-diminishment,
+      confidence without overstepping. The decision-maker is addressed as a
+      counterpart in the discussion, not a superior to be placated.
+    weakened_by:
+      - تصاغر يقلل من مصداقية المتحدث كصاحب رأي
+      - ندّية غير مناسبة لمقام المستمع
+      - تغيّر مفاجئ في مستوى الخطاب عند الضغط
+    weakened_by_en:
+      - Self-diminishment that undercuts the speaker's standing as a source of judgment
+      - Familiarity inappropriate to the listener's position
+      - Abrupt register shift under pressure
+    note: >
+      V2 §27 — politeness is not weakness and directness is not aggression.
+      Judge the effect on the speaker's credibility, never the politeness itself.
+
+  - id: register_consistency
+    label: اتساق المستوى اللغوي
+    label_en: Register consistency
+    pass: executive
+    weight: medium
+    accepted_registers:
+      - id: msa
+        label: العربية الفصحى الحديثة
+        fits: formal boards, regulators, written-adjacent settings, recorded proceedings
+      - id: gulf_professional
+        label: العربية المهنية الخليجية
+        fits: Saudi and GCC executive meetings, internal leadership conversation
+      - id: egyptian_professional
+        label: العربية المهنية المصرية
+        fits: Egyptian institutional and professional settings
+    strong: >
+      يختار المتحدث مستوىً لغوياً مناسباً للجمهور ويحافظ عليه.
+    strong_en: >
+      The speaker selects a register appropriate to the audience and sustains it.
+    weakened_by:
+      - تنقّل غير مقصود بين الفصحى والعامية داخل الفكرة الواحدة
+      - مستوى لغوي لا يناسب الجمهور المُعلن للسيناريو
+    explicitly_not_penalised:
+      - استخدام العامية المهنية في سياق داخلي مناسب
+      - اختيار الفصحى في سياق رسمي
+    note: >
+      No register is scored as superior. Only mismatch with the scenario's
+      declared audience, or unintentional drift mid-thought, is a finding.
+
+  - id: code_switching
+    label: التناوب اللغوي عربي-إنجليزي
+    label_en: Arabic-English code-switching
+    pass: executive
+    weight: low
+    stance: >
+      Code-switching is normal, professional Saudi and Gulf workplace register.
+      It is NEVER a finding on its own. (V2 §3.3, §28)
+    strong: >
+      المصطلحات الإنجليزية تُستخدم حيث هي المصطلح المتداول فعلياً في المجال.
+    strong_en: >
+      English terms are used where they are the genuinely current term of art.
+    flag_only_when:
+      - id: reduces_clarity
+        test: >
+          A precise, currently-used Arabic term exists AND the scenario's declared
+          audience is stated to prefer Arabic AND the substitution makes the point
+          harder to follow. All three must hold.
+      - id: obscures_absence_of_substance
+        test: English buzzwords stand in place of a specific claim or number
+    never_flag:
+      # Standard professional terminology in Saudi healthcare and business Arabic.
+      - KPI
+      - governance
+      - compliance
+      - accreditation
+      - CBAHI
+      - JCI
+      - PMO
+      - risk register
+      - dashboard
+      - stakeholder
+      - roadmap
+      - ROI
+
+  - id: pressure_integrity_ar
+    label: الثبات تحت الضغط
+    label_en: Pressure integrity (Arabic-calibrated)
+    pass: executive
+    weight: critical
+    segmented: true
+    strong: >
+      عند التحدي يُدافَع عن الموقف بهدوء، ويُعترف بالخطأ الحقيقي بوضوح وسرعة،
+      ولا يتغير مستوى الخطاب.
+    strong_en: >
+      Under challenge the position is defended calmly, genuine error is conceded
+      clearly and quickly, and register does not change.
+    arabic_specific_signals:
+      # These are the Arabic surface forms that pressure actually takes.
+      - id: courtesy_escalation
+        signal: Deference markers increase sharply after a challenge turn
+        reads_as: retreat rather than respect
+      - id: formula_retreat
+        signal: Religious or formulaic expressions replace a substantive rebuttal
+        reads_as: declining to hold the position
+      - id: register_flight
+        signal: Shift toward formal MSA immediately after a challenge
+        reads_as: creating distance instead of engaging
+      - id: over_concession
+        signal: Full agreement with a challenge the speaker had evidence against
+        reads_as: prioritising harmony over accuracy
+
+executive_mirror:
+  frame: "لو كنت جالساً أمامك على الطاولة، هذا هو الانطباع الذي سأخرج به."
+  frame_en: "If I were sitting across the table from you, this is how I would perceive you."
+  dimensions:
+    - authority
+    - confidence
+    - warmth
+    - assertiveness
+    - strategic_thinking
+    - executive_maturity
+    - credibility
+    - persuasion
+    - clarity
+    - defensiveness
+    - ownership
+    - decision_orientation
+  cultural_calibration: >
+    Warmth and authority are not in tension in GCC executive settings — a
+    speaker can read as both, and the strongest ones do. Do not treat high
+    warmth as reduced authority. Do not treat directness as reduced warmth.
+  output_rule: >
+    Perception statements are written in the language the user spoke. Each cites
+    an Arabic evidence span verbatim, with diacritics as spoken. Never assert an
+    internal state; describe the feature, then the perception it invites.
+
+seniority:
+  ladder: [specialist, manager, senior_manager, director, executive_director, c_suite]
+  output_shape: same_as_en   # sounds_like / why / lift — never a standalone score
+  arabic_markers:
+    executive_director:
+      - ربط المبادرة بالأثر المؤسسي لا بالإنجاز الإداري
+      - تحديد المفاضلة والأولوية تحت قيد الموارد
+      - موقف صريح من المخاطرة والحوكمة
+    specialist:
+      - سرد الإجراء والخطوات بالتفصيل
+      - التركيز على صحة التنفيذ دون أثره

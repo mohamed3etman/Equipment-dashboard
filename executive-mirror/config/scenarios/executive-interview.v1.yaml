@@ -1,0 +1,138 @@
+id: executive-interview
+version: 1
+label_en: Executive Job Interview
+label_ar: مقابلة وظيفية تنفيذية
+category: interview
+languages: [en, ar]
+default_duration_minutes: 8
+min_duration_minutes: 4
+max_duration_minutes: 15
+
+target_seniority: executive_director   # what the answers are judged against (§6)
+answer_framework_expected: true        # ANSWER applies here (§5)
+
+audience:
+  en: >
+    A hiring executive and an executive recruiter, interviewing for a group-level
+    quality, governance or transformation leadership role in a large healthcare
+    or services organisation in Saudi Arabia.
+  ar: >
+    مسؤول تنفيذي في جهة التوظيف مع مستشار توظيف تنفيذي، لمقابلة على منصب قيادي
+    على مستوى المجموعة في الجودة أو الحوكمة أو التحول، في مؤسسة كبيرة بالمملكة.
+
+situation:
+  en: >
+    You are 20 minutes into a first-round executive interview. Your CV is
+    credible and the panel has read it. They are no longer establishing whether
+    you have done the work — they are testing whether you think at the level of
+    the role, whether your claimed outcomes survive scrutiny, and whether you
+    hold a position when it is pushed.
+  ar: >
+    أنت في الدقيقة العشرين من مقابلة تنفيذية أولى. سيرتك الذاتية مقنعة وقد
+    اطّلع عليها الفريق. لم يعودوا يتحققون مما إذا كنت قد أنجزت العمل — بل
+    يختبرون ما إذا كنت تفكر على مستوى المنصب، وما إذا كانت النتائج التي تذكرها
+    تصمد أمام التدقيق، وما إذا كنت تثبت على موقفك عند الضغط.
+
+user_objectives:
+  en:
+    - Demonstrate enterprise-level leadership, not functional competence
+    - Make claimed outcomes verifiable
+    - Distinguish your own decisions from the team's delivery
+    - Hold a defensible position under challenge without becoming defensive
+    - Close on a recommendation rather than an explanation
+  ar:
+    - إظهار قيادة على مستوى المؤسسة لا كفاءة وظيفية
+    - جعل النتائج المذكورة قابلة للتحقق
+    - تمييز قراراتك الشخصية عن إنجاز الفريق
+    - الثبات على موقف قابل للدفاع تحت التحدي دون تموضع دفاعي
+    - الختام بتوصية لا بشرح
+
+opening_questions:
+  # The persona opens with one of these, chosen at random unless a retry pins it.
+  en:
+    - id: en_scope
+      text: >
+        Let's start with scope. You describe yourself as having led enterprise
+        quality and PMO for a hospital group. Walk me through what you personally
+        decided that the organisation would not have decided without you.
+      probes: [ownership, strategic_framing, evidence_and_quantification]
+    - id: en_failure
+      text: >
+        Tell me about an improvement programme of yours that did not deliver what
+        you expected. I am specifically interested in what you got wrong.
+      probes: [ownership, pressure_integrity, executive_maturity]
+    - id: en_priority
+      text: >
+        If you joined us and your budget were cut by thirty percent in the first
+        quarter, what would you stop doing? Be specific.
+      probes: [decision_orientation, compression, strategic_framing]
+  ar:
+    - id: ar_scope
+      text: >
+        لنبدأ بنطاق المسؤولية. أنت تصف نفسك بأنك قدت الجودة وإدارة المشاريع على
+        مستوى مجموعة مستشفيات. اشرح لي تحديداً: ما القرار الذي اتخذته أنت شخصياً
+        وما كانت المؤسسة لتتخذه بدونك؟
+      probes: [ownership, strategic_framing, evidence_and_quantification]
+    - id: ar_failure
+      text: >
+        حدثني عن برنامج تحسين قدته ولم يحقق ما توقعته. يهمني تحديداً ما الذي
+        أخطأت فيه أنت.
+      probes: [ownership, pressure_integrity_ar, executive_maturity]
+    - id: ar_priority
+      text: >
+        لو انضممت إلينا وخُفضت ميزانيتك بثلاثين بالمئة في الربع الأول، ما الذي
+        ستتوقف عن عمله؟ أريد إجابة محددة.
+      probes: [decision_orientation, compression, strategic_framing]
+
+# V2 §9 — board-level questioning IS in the MVP, delivered by this single persona.
+challenge_bank:
+  en:
+    - Why should I believe that number?
+    - What did you personally own, as opposed to your team?
+    - What changed as a result? Not what you did — what changed.
+    - What would your critics inside that organisation say about this?
+    - What is the risk in what you have just proposed?
+    - What happens if we do nothing?
+    - What is your recommendation?
+    - What evidence supports this?
+    - What would you do if the CEO disagreed with you?
+    - What would you prioritise if resources were cut by thirty percent?
+    - You have described a process. I asked about an outcome.
+    - That sounds like something your predecessor could also claim. What is different about you?
+  ar:
+    - لماذا يجب أن أصدق هذا الرقم؟
+    - ما الذي تملكته أنت شخصياً مقابل ما أنجزه فريقك؟
+    - ما الذي تغيّر نتيجةً لذلك؟ لا ما فعلته — بل ما الذي تغيّر.
+    - ماذا سيقول منتقدوك داخل تلك المؤسسة عن هذا؟
+    - ما المخاطرة فيما اقترحته للتو؟
+    - ماذا يحدث لو لم نفعل شيئاً؟
+    - ما توصيتك؟
+    - ما الدليل الذي يسند هذا؟
+    - ماذا ستفعل لو اختلف معك الرئيس التنفيذي؟
+    - ما أولوياتك لو خُفضت الموارد بثلاثين بالمئة؟
+    - أنت وصفت إجراءً. أنا سألت عن نتيجة.
+    - هذا شيء يستطيع سلفك ادعاءه أيضاً. ما الذي يختلف فيك أنت؟
+
+# Deterministic targets used by Pass 0 and shown alongside metrics.
+response_targets:
+  words_per_response:
+    ideal_min: 80
+    ideal_max: 220
+    hard_max: 350
+  conclusion_latency_words:
+    en: { ideal_max: 25, concern_above: 60 }
+    ar: { ideal_max: 45, concern_above: 90 }   # calibrated per Arabic rubric
+  response_duration_seconds:
+    ideal_min: 30
+    ideal_max: 90
+
+rubric:
+  en: rubrics/en/executive.v1
+  ar: rubrics/ar/executive.v1
+
+emphasis:
+  # Dimensions weighted up for this scenario specifically.
+  - ownership
+  - evidence_and_quantification
+  - pressure_integrity
+  - decision_orientation

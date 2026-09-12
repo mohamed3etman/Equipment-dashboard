@@ -1,0 +1,87 @@
+# Evidence discipline — Master Build Prompt V2 §14
+# These rules are enforced in code (src/analysis/schema.ts), not merely advisory.
+# A finding that violates them is DROPPED before it ever reaches the user.
+id: evidence-rules
+version: 1
+
+rules:
+  - id: quote_required
+    description: >
+      Every finding of severity 'significant' or higher MUST cite at least one
+      verbatim span from the user's own turns. Paraphrase is not evidence.
+    enforced_in: code
+
+  - id: verbatim_match
+    description: >
+      Each evidence quote must appear verbatim in the transcript of a user turn.
+      Normalisation permitted: Unicode NFKC, Arabic tatweel removal, Arabic
+      diacritic removal, whitespace collapse, and curly/straight quote folding.
+      Nothing else. If the quote cannot be located, the finding is dropped.
+    enforced_in: code
+
+  - id: timestamp_anchored
+    description: >
+      Each evidence span resolves to turn_index + start_ms/end_ms so the UI can
+      jump to the audio. Anchoring is computed in code from word timestamps,
+      never supplied by the model.
+    enforced_in: code
+
+  - id: no_speaker_confusion
+    description: >
+      Evidence may only be drawn from turns where speaker == 'user'.
+      A finding quoting the persona is dropped.
+    enforced_in: code
+
+  - id: four_part_finding
+    description: >
+      Every finding carries: finding, evidence[], why_it_matters, recommended_change.
+      Any missing part invalidates the finding. (V2 §14)
+    enforced_in: schema
+
+  - id: no_invented_metrics
+    description: >
+      Evaluation passes may REFERENCE deterministic metrics supplied to them but
+      must never state a numeric metric of their own. Numbers in model prose are
+      cross-checked against Pass 0 output; unmatched numerics flag the finding
+      for review. (V2 §45.8)
+    enforced_in: code
+
+  - id: no_permanent_traits
+    description: >
+      Findings describe THIS response, not the person. Trait language
+      ("you are defensive") is rejected in favour of observation language
+      ("this answer contained X"). Persistence is decided by the memory layer
+      across sessions, never by a single evaluation. (V2 §22)
+    enforced_in: prompt
+
+bands:
+  # V2 §15 — five bands, no composite score, no decimals.
+  - id: strong
+    label_en: Strong
+    label_ar: قوي
+    rank: 5
+  - id: effective
+    label_en: Effective
+    label_ar: فعّال
+    rank: 4
+  - id: developing
+    label_en: Developing
+    label_ar: قيد التطوير
+    rank: 3
+  - id: needs_attention
+    label_en: Needs Attention
+    label_ar: يحتاج انتباه
+    rank: 2
+  - id: critical
+    label_en: Critical
+    label_ar: حرج
+    rank: 1
+
+forbidden_outputs:
+  # V2 §15, §42 — things the system must never emit.
+  - composite_executive_score
+  - numeric_score_0_100
+  - decimal_dimension_score
+  - personality_diagnosis
+  - benchmark_against_other_executives   # no corpus exists; would be fabrication
+  - vocabulary_diversity_as_headline

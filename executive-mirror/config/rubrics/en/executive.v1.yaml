@@ -1,0 +1,233 @@
+id: executive
+language: en
+version: 1
+status: stable
+extends: shared/evidence-rules.v1
+label: Executive Communication Rubric (English)
+
+# V2 §3.1 — what senior decision-makers actually judge.
+# Each dimension states what a STRONG answer looks like and what specifically
+# weakens it, so the evaluator has a concrete target rather than an adjective.
+
+dimensions:
+  - id: answer_fidelity
+    label: Did you answer the question asked?
+    pass: content
+    weight: critical
+    strong: >
+      The response addresses the question that was actually asked, including its
+      implicit ask. If the question had two parts, both are answered.
+    weakened_by:
+      - Answering an adjacent question the speaker preferred
+      - Answering only the comfortable half of a two-part question
+      - Substituting narrative for the specific thing requested
+    probe: >
+      Restate the interviewer's question in one line. Then state whether the
+      response answered it, partially answered it, or moved elsewhere.
+
+  - id: conclusion_positioning
+    label: Did you lead with the answer?
+    pass: content
+    weight: critical
+    strong: >
+      The core claim, position or recommendation appears in the first one or two
+      sentences. Context and reasoning follow it.
+    weakened_by:
+      - Chronological build-up before the point
+      - Methodology or process described before the outcome
+      - The actual answer arriving only in the final seconds
+    measured_with: conclusion_latency_words
+    probe: >
+      Identify the sentence containing the actual answer and report how many
+      words preceded it.
+
+  - id: evidence_and_quantification
+    label: Did you support the claim with evidence?
+    pass: content
+    weight: high
+    strong: >
+      Claims are attached to numbers, dates, named standards, named outcomes or
+      concrete artefacts. Scale is made legible to the listener.
+    weakened_by:
+      - Adjectives standing in for measurement ("significant", "major")
+      - Achievements with no baseline, no delta and no timeframe
+      - Numbers given without the denominator that makes them meaningful
+
+  - id: ownership
+    label: Was your own contribution clear?
+    pass: content
+    weight: high
+    strong: >
+      The speaker's personal decisions, actions and accountability are
+      distinguishable from the team's, without diminishing the team.
+    weakened_by:
+      - Uniform "we" that makes personal contribution unrecoverable
+      - Passive constructions that remove the actor
+      - Describing what happened rather than what the speaker decided
+
+  - id: compression
+    label: Was it as short as it could be?
+    pass: executive
+    weight: high
+    strong: >
+      Length matches the weight of the question. No sentence could be removed
+      without losing something the listener needed.
+    weakened_by:
+      - Restating the same point in three formulations
+      - Implementation mechanics an executive audience did not ask for
+      - Continuing past the natural end of the answer
+    measured_with: [words_per_response, longest_monologue_ms]
+
+  - id: strategic_framing
+    label: Did you frame it at the right altitude?
+    pass: executive
+    weight: high
+    strong: >
+      The answer connects activity to enterprise consequence — risk, cost,
+      capability, reputation, patient outcome, regulatory position.
+    weakened_by:
+      - Departmental framing for an enterprise question
+      - Activity described without consequence
+      - Technical accuracy with no "so what"
+
+  - id: decision_orientation
+    label: Did you land on a recommendation?
+    pass: executive
+    weight: high
+    strong: >
+      The answer closes with a position, a decision, or a clear recommendation
+      with its trade-off named.
+    weakened_by:
+      - Presenting options with no preference
+      - Ending on analysis rather than direction
+      - Deferring the judgment back to the questioner without cause
+
+  - id: pressure_integrity
+    label: How did you hold up when challenged?
+    pass: executive
+    weight: critical
+    strong: >
+      Under challenge the position is defended on its merits, genuine error is
+      conceded cleanly and quickly, and the speaker's register does not change.
+    weakened_by:
+      - Over-conceding a position that was defensible
+      - Justifying at length instead of addressing the challenge
+      - Register shift — faster speech, more hedges, longer answers after pressure
+      - Treating a hard question as a personal attack
+    segmented: true   # evaluated before vs after the first challenge turn
+
+  - id: hedging_control
+    label: Did qualifiers weaken your position?
+    pass: executive
+    weight: medium
+    strong: >
+      Uncertainty is stated once, precisely, where it genuinely exists.
+    weakened_by:
+      - Stacked qualifiers ("I think maybe we probably could")
+      - Hedging a fact the speaker actually knows
+      - Apologising for taking up time
+    measured_with: hedge_density_per_100w
+    note: >
+      Professional caution is not hedging. Flag only where the qualifier
+      reduces the force of a claim the speaker is entitled to make.
+
+  - id: technical_detail_control
+    label: Was the detail level right for this audience?
+    pass: persona
+    weight: high
+    strong: >
+      Depth is calibrated to the listener's declared domain literacy. Terms
+      outside it are unpacked in one clause, without condescension.
+    weakened_by:
+      - Unexplained domain acronyms to a non-clinical audience
+      - Depth that signals specialist rather than executive
+      - Over-simplifying for an audience that has the expertise
+    measured_with: jargon_density_per_100w
+
+# V2 §5 — ANSWER. Applied only where the scenario declares it appropriate.
+answer_framework:
+  id: ANSWER
+  apply_when: scenario.answer_framework_expected == true
+  steps:
+    - key: A
+      name: Answer
+      test: Is the direct answer present in the opening?
+    - key: N
+      name: Navigate
+      test: Is the reasoning path made explicit and easy to follow?
+    - key: S
+      name: Support
+      test: Is there evidence a sceptic would accept?
+    - key: W
+      name: Why
+      test: Is the consequence for the organisation stated?
+    - key: E
+      name: End
+      test: Is there a recommendation or clear position?
+    - key: R
+      name: Reinforce
+      test: Is the outcome restated so it is what the listener remembers?
+  guidance: >
+    Do not penalise a response for skipping steps that the question did not
+    warrant. A 20-second factual answer does not need all six. Report which
+    steps were present, which were missing, and which were genuinely needed.
+
+# V2 §6 — seniority ladder. Explicitly NOT a standalone score.
+seniority:
+  ladder: [specialist, manager, senior_manager, director, executive_director, c_suite]
+  output_shape: |
+    Report three things and nothing else:
+      1. sounds_like  — the level this answer currently reads as
+      2. why          — the specific language and structural features that place it there
+      3. lift         — what would move it toward the level the scenario expects
+    Never emit a seniority number or band on its own.
+  markers:
+    specialist:
+      - process and method described in sequence
+      - correctness emphasised over consequence
+      - tooling and technique named for their own sake
+    manager:
+      - team coordination and delivery emphasis
+      - progress reported against plan
+    senior_manager:
+      - cross-functional dependency and resourcing
+      - escalation and prioritisation within a function
+    director:
+      - functional strategy and capability building
+      - measurable outcomes owned across a function
+    executive_director:
+      - enterprise consequence and portfolio prioritisation
+      - explicit trade-offs under constraint
+      - governance and risk posture stated
+    c_suite:
+      - direction set under genuine uncertainty
+      - capital, reputation and organisational consequence weighed together
+      - position taken and defended
+
+# V2 §4 — the perception layer.
+executive_mirror:
+  frame: "If I were sitting across the table from you, this is how I would perceive you."
+  dimensions:
+    - authority
+    - confidence
+    - warmth
+    - assertiveness
+    - strategic_thinking
+    - executive_maturity
+    - credibility
+    - persuasion
+    - clarity
+    - defensiveness
+    - ownership
+    - decision_orientation
+  output_rule: >
+    Each perception must be expressed as: the observable feature in the
+    response, then the perception a listener would plausibly form from it.
+    Never assert an internal state. Write "a CEO could read this as", not
+    "you were". Every perception carries at least one evidence span.
+  worked_example:
+    weak: "You sounded less confident."
+    strong: >
+      "Your answer opened with three qualifiers and the recommendation arrived
+      in the final sentence. A CEO could therefore read this as well-informed
+      but not yet decided."

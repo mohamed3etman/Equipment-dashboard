@@ -1,0 +1,69 @@
+id: lexicon
+language: en
+version: 1
+
+fillers:
+  # Matched on normalised word tokens. Counted deterministically (Pass 0).
+  single: [um, uh, umm, uhh, er, erm, ah, hmm, mmm, like, so, basically, actually, literally, right]
+  # Multi-word fillers matched as contiguous token sequences.
+  phrases:
+    - [you, know]
+    - [i, mean]
+    - [sort, of]
+    - [kind, of]
+    - [you, see]
+  # Words above that are ALSO legitimate content words. Only counted as fillers
+  # in discourse-marker position: turn-initial, or bounded by pauses >= 200ms.
+  context_dependent: [like, so, actually, literally, right]
+
+hedges:
+  single: [maybe, perhaps, possibly, probably, somewhat, slightly, arguably, roughly, generally]
+  phrases:
+    - [i, think]
+    - [i, guess]
+    - [i, believe]
+    - [i, would, say]
+    - [sort, of]
+    - [kind, of]
+    - [a, little, bit]
+    - [more, or, less]
+    - [to, be, honest]
+    - [if, that, makes, sense]
+
+apologies:
+  phrases:
+    - [i, apologise]
+    - [i, apologize]
+    - [sorry]
+    - [i, am, sorry]
+    - [excuse, me]
+    - [my, apologies]
+  note: >
+    Only flagged where no genuine error is being acknowledged. The evaluator
+    decides; Pass 0 only counts occurrences and records their positions.
+
+ownership_positive:
+  phrases:
+    - [i, decided]
+    - [i, led]
+    - [i, owned]
+    - [i, built]
+    - [i, established]
+    - [my, decision]
+    - [i, was, accountable]
+    - [i, chose]
+
+quantification_markers:
+  # Regex families used to detect evidence density. Applied to raw text.
+  patterns:
+    - '\d+(\.\d+)?\s*%'
+    - '\b\d{1,3}(,\d{3})+\b'
+    - '\b\d+(\.\d+)?\s*(million|thousand|billion|k|m|bn)\b'
+    - '\b(SAR|USD|EGP|AED)\s*\d'
+    - '\b\d+(\.\d+)?\s*(hours?|days?|weeks?|months?|years?)\b'
+    - '\b(19|20)\d{2}\b'
+
+jargon:
+  # Domain terms. Density judged against the persona's declared domain_literacy.
+  healthcare_quality: [CBAHI, JCI, FMEA, RCA, CAPA, OVR, ESR, accreditation, PDSA, HAI, sentinel event, root cause analysis, patient safety, clinical governance]
+  management: [PMO, KPI, OKR, governance, stakeholder, roadmap, ROI, EBITDA, capex, opex, risk register, RACI]
