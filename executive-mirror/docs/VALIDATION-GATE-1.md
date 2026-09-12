@@ -53,6 +53,57 @@ connect_rejected  api.elevenlabs.io:443  gateway answered 403 to CONNECT (policy
 
 Eleven of eleven. `npx tsx scripts/validate-providers.ts` reports exactly this and exits non-zero.
 
+### A.1b Attempted workaround via the ElevenLabs connector — also blocked
+
+The ElevenLabs MCP connector is available in this session and is not subject to
+the egress policy, so it was tried as an independent path to answer one flagged
+product risk: **does the Arabic voice read as a senior executive, or as a
+newsreader?**
+
+It did not get there, and the reason is itself a finding:
+
+```
+creative_generate_speech → "You need to be on the creator tier or above to use this voice."
+```
+
+Every Arabic voice the workspace can list is `category: professional`,
+`is_library_voice: true` — the tier-locked class. Two candidates were priced
+(`estimate_only`, so nothing was charged) and both were refused.
+
+**Two things follow.**
+
+1. **Voice selection has a cost precondition nobody had priced.** A credible
+   Saudi executive voice requires at least ElevenLabs **Creator** tier. The
+   `.env.example` asks for `EM_TTS_VOICE_AR` as though picking one were free.
+   Budget this before the user test — a default free-tier voice would fail the
+   protocol's Test 2 for reasons that have nothing to do with the product.
+2. **This would not have validated the product anyway.** The connector is a
+   different code path from `ElevenLabsTtsProvider`. It would have told us
+   whether the *vendor* can produce a credible Arabic CEO; it would not have
+   tested one line of the adapter, the streaming path, or the latency budget.
+   Worth being explicit, because "the Arabic voice sounded good in a connector"
+   is exactly the kind of near-miss evidence that gets mistaken for validation.
+
+Shortlisted for when the tier allows (all Saudi-accented, middle-aged, male):
+
+| Voice | id | Note |
+|---|---|---|
+| Nasser — Enterprise, Professional | `3GnbqfjaW8xI6hRTVx4Y` | Neutral "white dialect"; described for enterprise telephony, so carries real IVR risk |
+| Faisal alotaibi — Warm Saudi | `wyC6KvCMTAXGbiCKlfSx` | Warm/mature; persona wants low warmth, so test against Nasser |
+| Eid — Warm, Clear, Confident | `Ywuz3KyW2N5pqKNpwcCL` | Saudi, authoritative, corporate narration |
+
+Judge them on one question: does it sound like a person in a room, or a
+recording? Narration-optimised voices fail that test even when they sound good.
+
+### A.1c A defect in the harness itself
+
+The first real run exited **0** with eleven UNVALIDATED rows. In CI, or in any
+`&&` chain, that reads as a pass when in fact nothing executed — the precise
+substitution §1 forbids, committed by the tool built to prevent it.
+
+Fixed. Exit codes are now `0` = everything ran and passed, `1` = something ran
+and failed, `2` = nothing could run.
+
 ### A.2 What the harness will measure when you run it
 
 Built and waiting, `scripts/validate-providers.ts`:
@@ -232,6 +283,7 @@ npx tsx scripts/demo.ts ar                  # full journey, mock providers
 | Defect | Severity | How found |
 |---|---|---|
 | Arabic evaluated on 6 dimensions, English on 10 | **Critical** | printing what reached the evaluator |
+| Provider harness exited 0 on a fully UNVALIDATED run | High | running it for real |
 | Quantification counted digits only — "forty eight hours" scored zero | High | corpus probe |
 | Multi-word jargon entries could never match (per-token matching) | Medium | corpus probe |
 | Arabic jargon list omitted the English clinical acronyms Saudi healthcare Arabic uses | Medium | corpus probe |

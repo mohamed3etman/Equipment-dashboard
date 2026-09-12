@@ -246,7 +246,17 @@ async function main() {
   }
   console.log('='.repeat(96) + '\n');
   writeFileSync(join(OUT, 'provider-validation.json'), JSON.stringify({ ranAt: new Date().toISOString(), checks }, null, 2));
-  process.exit(n('FAIL') > 0 ? 1 : 0);
+
+  // Exit codes matter here. An UNVALIDATED run must NOT exit 0: in CI, or in a
+  // shell chain, a zero exit reads as "validated" when in fact nothing ran.
+  // That is exactly the substitution of absence-of-failure for evidence that
+  // this harness exists to prevent.
+  //   0 = every check executed and passed
+  //   1 = something executed and failed
+  //   2 = nothing could be executed (missing credentials or blocked egress)
+  if (n('FAIL') > 0) process.exit(1);
+  if (n('UNVALIDATED') > 0) process.exit(2);
+  process.exit(0);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
