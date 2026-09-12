@@ -1,0 +1,60 @@
+{
+  "ranAt": "2026-09-12T14:11:42.813Z",
+  "checks": [
+    {
+      "name": "TTS synthesis [en]",
+      "status": "UNVALIDATED",
+      "detail": "ELEVENLABS_API_KEY not set"
+    },
+    {
+      "name": "TTS synthesis [ar]",
+      "status": "UNVALIDATED",
+      "detail": "ELEVENLABS_API_KEY not set"
+    },
+    {
+      "name": "TTS synthesis [mixed]",
+      "status": "UNVALIDATED",
+      "detail": "ELEVENLABS_API_KEY not set"
+    },
+    {
+      "name": "STT round trip [en]",
+      "status": "UNVALIDATED",
+      "detail": "DEEPGRAM_API_KEY not set"
+    },
+    {
+      "name": "STT round trip [ar]",
+      "status": "UNVALIDATED",
+      "detail": "DEEPGRAM_API_KEY not set"
+    },
+    {
+      "name": "STT round trip [mixed]",
+      "status": "UNVALIDATED",
+      "detail": "DEEPGRAM_API_KEY not set"
+    },
+    {
+      "name": "LLM persona turn [en]",
+      "status": "UNVALIDATED",
+      "detail": "ANTHROPIC_API_KEY not set"
+    },
+    {
+      "name": "LLM persona turn [ar]",
+      "status": "UNVALIDATED",
+      "detail": "ANTHROPIC_API_KEY not set"
+    },
+    {
+      "name": "Pass 0 on real audio [en]",
+      "status": "UNVALIDATED",
+      "detail": "no real transcript — STT round trip did not produce one"
+    },
+    {
+      "name": "Pass 0 on real audio [ar]",
+      "status": "UNVALIDATED",
+      "detail": "no real transcript — STT round trip did not produce one"
+    },
+    {
+      "name": "Pass 0 on real audio [mixed]",
+      "status": "UNVALIDATED",
+      "detail": "no real transcript — STT round trip did not produce one"
+    }
+  ]
+}

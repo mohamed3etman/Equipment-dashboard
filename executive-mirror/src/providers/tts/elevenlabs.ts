@@ -14,12 +14,22 @@ import type { Lang } from '@/lib/types';
 export class ElevenLabsTtsProvider implements TtsProvider {
   readonly id = 'elevenlabs';
   readonly supportsLanguages: Lang[] = ['en', 'ar'];
-  readonly outputFormat = 'mp3' as const;
+  readonly outputFormat: 'mp3' | 'pcm16';
 
+  /**
+   * `format` matters more than it looks. Browser playback wants mp3 (small,
+   * decodable by decodeAudioData). The STT round-trip check in
+   * scripts/validate-providers.ts must feed raw linear16 to Deepgram, so it
+   * asks for pcm — handing mp3 bytes to a linear16 endpoint produces silence
+   * or garbage, not an error, which would look like an STT accuracy problem.
+   */
   constructor(
     private apiKey: string,
     private modelId = process.env.EM_TTS_MODEL ?? 'eleven_flash_v2_5',
-  ) {}
+    format: 'mp3' | 'pcm16' = 'mp3',
+  ) {
+    this.outputFormat = format;
+  }
 
   voiceFor(language: Lang, spec: Record<string, string>): string {
     const envKey = language === 'ar' ? 'EM_TTS_VOICE_AR' : 'EM_TTS_VOICE_EN';
@@ -36,7 +46,9 @@ export class ElevenLabsTtsProvider implements TtsProvider {
       );
     }
 
-    const url = `https://api.elevenlabs.io/v1/text-to-speech/${opts.voiceId}/stream?output_format=mp3_22050_32`;
+    // pcm_16000 matches the sample rate the STT adapter opens with.
+    const outputFormat = this.outputFormat === 'pcm16' ? 'pcm_16000' : 'mp3_22050_32';
+    const url = `https://api.elevenlabs.io/v1/text-to-speech/${opts.voiceId}/stream?output_format=${outputFormat}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {

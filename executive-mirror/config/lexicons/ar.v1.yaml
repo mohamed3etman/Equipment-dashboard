@@ -74,19 +74,38 @@ ownership_positive:
     - [اخذت, على, عاتقي]
 
 quantification_markers:
+  # IMPORTANT: these run against NORMALISED text, so they must be written in
+  # normalised form — no diacritics, ة folded to ه, أإآ folded to ا, ى to ي,
+  # and Arabic-Indic digits already folded to ASCII. Writing 'ساعة' here would
+  # silently never match, because the text has become 'ساعه' by then.
   patterns:
     - '\d+(\.\d+)?\s*%'
-    - '[٠-٩]+(\.[٠-٩]+)?\s*%'
-    - '\b\d{1,3}(,\d{3})+\b'
+    - '\d{1,3}(,\d{3})+'
     - '\d+\s*(مليون|الف|مليار)'
     - '(ريال|درهم|جنيه|دولار)\s*\d'
-    - '\d+\s*(ساعه|ساعة|يوم|اسبوع|شهر|سنه|سنة)'
+    - '\d+\s*(ساعه|ساعات|يوم|ايام|اسبوع|اسابيع|شهر|شهور|اشهر|سنه|سنوات|ربع|ارباع)'
+    # Spoken Arabic numerals, which are at least as common as digits in speech.
+    - '(واحد|اثنين|اثنان|ثلاثه|اربعه|خمسه|سته|سبعه|ثمانيه|تسعه|عشره|عشرين|ثلاثين|اربعين|خمسين|سبعين|مئه|مايه|الف)\s+(ساعه|ساعات|يوم|ايام|اسبوع|اسابيع|شهر|شهور|اشهر|سنه|سنوات|ربع|موظفا|موظف|حاله|حالات|تقرير|تقارير|قسم|اقسام|اداره|ادارات|مستشفى|مستشفيات)'
+    # Dual forms carry a count in Arabic: ساعتين = two hours, ادارتين = two departments.
+    - '(ساعتين|يومين|اسبوعين|شهرين|سنتين|ادارتين|قسمين|مرتين|ربعين)'
+    - '(نصف|ثلث|ربع|ثلثي)\s+\S+'
 
 jargon:
-  # English terms inside Arabic speech are NORMAL professional register.
-  # Never flagged for being English. See rubric dimension `code_switching`.
-  healthcare_quality_ar: [الاعتماد, سلامة المرضى, الجوده, الجودة, ادارة المخاطر, التحسين المستمر, الحوكمة السريريه]
-  management_ar: [الحوكمة, المؤشرات, اصحاب المصلحه, ادارة المشاريع, خارطة الطريق, العائد على الاستثمار]
+  # Jargon density and code-switching are DIFFERENT measurements and must not
+  # be conflated. Code-switching asks "did you change language?" and is never a
+  # finding on its own. Jargon density asks "was this term inside the listener's
+  # declared literacy?" — and in Saudi healthcare Arabic the specialist terms of
+  # art ARE English acronyms. Omitting them made a code-switched clinical answer
+  # read as jargon-free, which is the opposite of the truth.
+  #
+  # SINGLE TOKENS ONLY. Matching is per-word, so a multi-word entry such as
+  # "سلامة المرضى" can never match. Split compounds into their carrying token.
+  healthcare_quality_ar: [الاعتماد, الجوده, الجودة, المخاطر, الحوكمه, الحوكمة, السريريه, السريرية]
+  management_ar: [المؤشرات, المصلحه, المصلحة, الطريق, الاستثمار]
+  # Clinical-specialist acronyms. The CEO persona declares clinical_medicine as
+  # `lay`, so these are beyond-audience depth regardless of the script they are
+  # written in.
+  clinical_specialist: [ovr, rca, capa, fmea, pdsa, hai, sbar, sentinel, triage, reconciliation, nosocomial]
 
 english_terms_accepted_in_arabic:
   # Explicitly whitelisted — never a code-switching finding.
