@@ -10,6 +10,8 @@ export interface ClientHello {
   /** Set on a retry so the persona asks the same opening question. */
   pinnedOpeningQuestionId?: string;
   focusObjective?: string;
+  /** Set when this session is a re-attempt; results attach to the original. */
+  retryOf?: string;
 }
 
 export type ClientMessage =

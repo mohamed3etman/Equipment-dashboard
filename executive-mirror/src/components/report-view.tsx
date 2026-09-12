@@ -16,7 +16,8 @@ export function ReportView({ run, labels }: { run: DemoRun; labels: LabelMaps })
 
   const ar = run.language === 'ar';
   const dir = ar ? 'rtl' : 'ltr';
-  const a = attempt === 1 ? run.attempt1 : run.attempt2;
+  const hasRetry = Boolean(run.attempt2 && run.comparison);
+  const a = attempt === 2 && run.attempt2 ? run.attempt2 : run.attempt1;
   const { evaluation: ev, metrics } = a.result;
 
   const objective = metrics.metrics.filter((m) => m.tier === 'objective');
@@ -38,7 +39,7 @@ export function ReportView({ run, labels }: { run: DemoRun; labels: LabelMaps })
           {t('Session report', 'تقرير الجلسة')}
         </h1>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {([1, 2] as Attempt[]).map((n) => (
+          {hasRetry && ([1, 2] as Attempt[]).map((n) => (
             <button
               key={n}
               onClick={() => setAttempt(n)}
@@ -49,18 +50,22 @@ export function ReportView({ run, labels }: { run: DemoRun; labels: LabelMaps })
               {t(`Attempt ${n}`, `المحاولة ${n === 1 ? '١' : '٢'}`)}
             </button>
           ))}
-          <button
-            onClick={() => setShowCompare((v) => !v)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-              showCompare ? 'border-accent/50 bg-accent/10 text-ink' : 'border-line text-muted hover:text-ink'
-            }`}
-          >
-            {t('Compare', 'المقارنة')}
-          </button>
+          {hasRetry ? (
+            <button
+              onClick={() => setShowCompare((v) => !v)}
+              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                showCompare ? 'border-accent/50 bg-accent/10 text-ink' : 'border-line text-muted hover:text-ink'
+              }`}
+            >
+              {t('Compare', 'المقارنة')}
+            </button>
+          ) : null}
         </div>
       </header>
 
-      {showCompare ? <Comparison run={run} ar={ar} L={L} S={S} /> : null}
+      {showCompare && run.comparison && run.attempt2
+        ? <Comparison run={run} comparison={run.comparison} attempt2={run.attempt2} ar={ar} L={L} S={S} />
+        : null}
 
       {/* ---- THE ONE THING (above the fold, primary CTA) ---- */}
       {!showCompare && (
@@ -78,12 +83,28 @@ export function ReportView({ run, labels }: { run: DemoRun; labels: LabelMaps })
               </p>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button variant="primary" onClick={() => { setAttempt(2); setShowCompare(false); }}>
-                {t('Try again with this focus', 'أعد المحاولة بهذا التركيز')}
-              </Button>
-              <Button variant="secondary" onClick={() => setShowCompare(true)}>
-                {t('See what changed', 'ماذا تغيّر')}
-              </Button>
+              {run.sessionId && !hasRetry ? (
+                // Real session, not yet retried: go and actually do it again.
+                <Button
+                  variant="primary"
+                  href={`/session?retryOf=${run.sessionId}&lang=${run.language}`}
+                >
+                  {t('Try again with this focus', 'أعد المحاولة بهذا التركيز')}
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={() => { setAttempt(2); setShowCompare(false); }}
+                  disabled={!hasRetry}
+                >
+                  {t('Try again with this focus', 'أعد المحاولة بهذا التركيز')}
+                </Button>
+              )}
+              {hasRetry ? (
+                <Button variant="secondary" onClick={() => setShowCompare(true)}>
+                  {t('See what changed', 'ماذا تغيّر')}
+                </Button>
+              ) : null}
             </div>
           </div>
         </Card>
@@ -292,9 +313,14 @@ function FindingList({
 }
 
 function Comparison({
-  run, ar, L, S,
-}: { run: DemoRun; ar: boolean; L: (id: string) => string; S: (id: string) => string }) {
-  const c = run.comparison;
+  run, comparison, attempt2, ar, L, S,
+}: {
+  run: DemoRun;
+  comparison: NonNullable<DemoRun['comparison']>;
+  attempt2: NonNullable<DemoRun['attempt2']>;
+  ar: boolean; L: (id: string) => string; S: (id: string) => string;
+}) {
+  const c = comparison;
   const t = (en: string, arabic: string) => (ar ? arabic : en);
   const verdictStyle = {
     achieved: 'border-positive/40 bg-positive/5 text-positive',
@@ -400,7 +426,7 @@ function Comparison({
             <Card className="flex items-center gap-3 p-4 text-sm">
               <span className="text-muted">{S(run.attempt1.result.evaluation.seniority.soundsLike)}</span>
               <span className="text-faint">→</span>
-              <span className="font-medium text-ink">{S(run.attempt2.result.evaluation.seniority.soundsLike)}</span>
+              <span className="font-medium text-ink">{S(attempt2.result.evaluation.seniority.soundsLike)}</span>
             </Card>
           </div>
         </div>

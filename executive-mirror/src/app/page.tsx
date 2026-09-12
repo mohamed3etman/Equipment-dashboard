@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { loadSessionConfig } from '@/config/loader';
+import { listSessions } from '@/session/store';
 import { Card } from '@/components/ui';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * Dashboard. (V2 §31)
@@ -11,6 +14,7 @@ import { Card } from '@/components/ui';
  */
 export default function Dashboard() {
   const en = loadSessionConfig('executive-interview', 'skeptical-executive-interviewer', 'en');
+  const recent = listSessions();
   const providersLive = Boolean(process.env.DEEPGRAM_API_KEY && process.env.ANTHROPIC_API_KEY && process.env.ELEVENLABS_API_KEY);
 
   return (
@@ -50,6 +54,39 @@ export default function Dashboard() {
         </div>
       </Card>
 
+      {recent.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
+            Your sessions
+          </h2>
+          <Card className="divide-y divide-line/60">
+            {recent.map((s) => (
+              <Link
+                key={s.id}
+                href={`/report/${s.id}`}
+                className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-ink">{s.scenarioLabel}</div>
+                  <div className="mt-0.5 font-mono text-[10px] text-faint">
+                    {new Date(s.createdAt).toISOString().slice(0, 16).replace('T', ' ')}Z · {s.language}
+                    {s.comparison ? ` · retried (${s.comparison.targetOutcome.verdict})` : ' · no retry yet'}
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-muted">
+                  {s.attempt1.result.evaluation.seniority.soundsLike.replace(/_/g, ' ')}
+                </span>
+              </Link>
+            ))}
+          </Card>
+          <p className="mt-2 text-xs leading-relaxed text-faint">
+            Held in the server process, not a database — they are gone if you restart
+            <code className="mx-1 font-mono">dev:live</code>. Fine for a run of sessions in one sitting;
+            say the word if you want them to survive a restart.
+          </p>
+        </section>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-faint">Available now</h2>
@@ -82,7 +119,7 @@ export default function Dashboard() {
               value={`v${loadSessionConfig('executive-interview', 'skeptical-executive-interviewer', 'ar').rubric.version} · developing`}
             />
             <Row label="Voice providers" value={providersLive ? 'live' : 'mock — no API keys set'} warn={!providersLive} />
-            <Row label="Sessions recorded" value="0" />
+            <Row label="Sessions recorded" value={String(recent.length)} />
           </Card>
           {!providersLive && (
             <p className="mt-2 max-w-readable text-xs leading-relaxed text-faint">

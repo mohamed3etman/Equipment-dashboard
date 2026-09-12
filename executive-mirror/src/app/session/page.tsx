@@ -24,6 +24,18 @@ export default function SessionPage() {
   const [stage, setStage] = useState<Stage>('setup');
   const [lang, setLang] = useState<Lang>('en');
   const [minutes, setMinutes] = useState(8);
+  const [reportId, setReportId] = useState<string | null>(null);
+
+  // A retry arrives as /session?retryOf=<id>&lang=<en|ar>. Read it once on
+  // mount rather than through a router hook, to keep this a plain client page.
+  const [retryOf, setRetryOf] = useState<string | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const r = q.get('retryOf');
+    const l = q.get('lang');
+    if (l === 'ar' || l === 'en') setLang(l);
+    if (r) { setRetryOf(r); setStage('miccheck'); }   // skip setup on a retry
+  }, []);
 
   return (
     <main dir={lang === 'ar' ? 'rtl' : 'ltr'} className="mx-auto max-w-2xl px-5 py-12 md:px-8">
@@ -42,8 +54,13 @@ export default function SessionPage() {
       {stage === 'miccheck' && (
         <MicCheck lang={lang} onPass={() => setStage('live')} onBack={() => setStage('setup')} />
       )}
-      {stage === 'live' && <Live lang={lang} minutes={minutes} onEnd={() => setStage('ended')} />}
-      {stage === 'ended' && <Ended lang={lang} />}
+      {stage === 'live' && (
+        <Live
+          lang={lang} minutes={minutes} retryOf={retryOf}
+          onEnd={(id) => { setReportId(id); setStage('ended'); }}
+        />
+      )}
+      {stage === 'ended' && <Ended lang={lang} reportId={reportId} />}
     </main>
   );
 }
@@ -295,7 +312,9 @@ function Check({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   );
 }
 
-function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: () => void }) {
+function Live({
+  lang, minutes, retryOf, onEnd,
+}: { lang: Lang; minutes: number; retryOf: string | null; onEnd: (reportId: string | null) => void }) {
   const t = (en: string, ar: string) => (lang === 'ar' ? ar : en);
   const [elapsed, setElapsed] = useState(0);
   const [level, setLevel] = useState(0);
@@ -318,7 +337,7 @@ function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: ()
         else if (m.type === 'barge_in') client.stopPlayback();
         else if (m.type === 'latency' && m.endToFirstAudioMs) setLastLatency(m.endToFirstAudioMs);
         else if (m.type === 'analysing') setStatus('analysing');
-        else if (m.type === 'report') onEnd();
+        else if (m.type === 'report') onEnd(m.sessionId);
         else if (m.type === 'error') { setStatus('failed'); setError(m.message); }
       },
       onClose: () => { if (!disposed) setStatus((s) => (s === 'analysing' ? s : 'failed')); },
@@ -330,6 +349,7 @@ function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: ()
         scenarioId: 'executive-interview',
         personaId: 'skeptical-executive-interviewer',
         language: lang,
+        ...(retryOf ? { retryOf } : {}),
       })
       .catch((e: unknown) => {
         setStatus('failed');
@@ -337,7 +357,7 @@ function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: ()
       });
 
     return () => { disposed = true; client.dispose(); };
-  }, [lang, onEnd]);
+  }, [lang, retryOf, onEnd]);
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
   const ss = String(elapsed % 60).padStart(2, '0');
@@ -412,22 +432,33 @@ function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: ()
   );
 }
 
-function Ended({ lang }: { lang: Lang }) {
+function Ended({ lang, reportId }: { lang: Lang; reportId: string | null }) {
   const t = (en: string, ar: string) => (lang === 'ar' ? ar : en);
   return (
     <div className="py-16 text-center">
       <h1 className="mb-3 text-2xl font-semibold tracking-tight text-ink">
         {t('Session ended', 'انتهت الجلسة')}
       </h1>
-      <p className="mx-auto mb-8 max-w-readable text-sm leading-relaxed text-muted">
-        {t(
-          'With provider keys configured, analysis returns in under 30 seconds. Without them the voice loop is silent — but the full report pipeline runs, and you can walk it on the worked example.',
-          'مع تكوين مفاتيح المزودين، يعود التحليل خلال أقل من ٣٠ ثانية. بدونها تكون حلقة الصوت صامتة — لكن مسار التقرير الكامل يعمل، ويمكنك تصفحه على المثال العملي.',
-        )}
-      </p>
-      <Button variant="primary" href={`/report?lang=${lang}`}>
-        {t('Open the worked example report', 'افتح تقرير المثال العملي')}
-      </Button>
+      {reportId ? (
+        <>
+          <p className="mx-auto mb-8 max-w-readable text-sm leading-relaxed text-muted">
+            {t('Your report is ready.', 'تقريرك جاهز.')}
+          </p>
+          <Button variant="primary" href={`/report/${reportId}`}>
+            {t('Open your report', 'افتح تقريرك')}
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="mx-auto mb-8 max-w-readable text-sm leading-relaxed text-muted">
+            {t(
+              'No report was produced — the session ended before analysis completed. Check the server log.',
+              'لم يُنتج تقرير — انتهت الجلسة قبل اكتمال التحليل. راجع سجل الخادم.',
+            )}
+          </p>
+          <Button variant="secondary" href="/">{t('Back', 'رجوع')}</Button>
+        </>
+      )}
     </div>
   );
 }

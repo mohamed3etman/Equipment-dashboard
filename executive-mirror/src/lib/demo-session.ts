@@ -209,14 +209,21 @@ class ScriptedLlm extends MockLlmProvider {
   override async json<T>(): Promise<T> { return (this.queue.shift() ?? {}) as T; }
 }
 
+/**
+ * What the report screen renders. A real session has no attempt2 until the
+ * user has actually retried, so those fields are optional — the demo simply
+ * always fills them.
+ */
 export interface DemoRun {
+  /** Absent for the worked example; set for a real session so retry can post back. */
+  sessionId?: string;
   language: Lang;
   scenarioLabel: string;
   personaLabel: string;
   rubric: { id: string; version: number; status: string };
   attempt1: { transcript: Transcript; result: AnalyseResult };
-  attempt2: { transcript: Transcript; result: AnalyseResult };
-  comparison: RetryComparison;
+  attempt2?: { transcript: Transcript; result: AnalyseResult };
+  comparison?: RetryComparison;
 }
 
 export async function runDemoSession(lang: Lang): Promise<DemoRun> {
