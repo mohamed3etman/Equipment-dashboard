@@ -13,7 +13,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:push": "tsx scripts/db-push.ts",
-    "config:validate": "tsx scripts/validate-config.ts"
+    "config:validate": "tsx scripts/validate-config.ts",
+    "dev:live": "tsx server.mts",
+    "start:live": "NODE_ENV=production tsx server.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",

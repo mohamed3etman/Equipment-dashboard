@@ -1,6 +1,8 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Card } from '@/components/ui';
+import { VoiceClient } from '@/lib/voice-client';
+import type { ServerMessage } from '@/session/ws-protocol';
 
 /**
  * Session setup and live session. (V2 §30)
@@ -296,21 +298,90 @@ function Check({ ok, children }: { ok: boolean; children: React.ReactNode }) {
 function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: () => void }) {
   const t = (en: string, ar: string) => (lang === 'ar' ? ar : en);
   const [elapsed, setElapsed] = useState(0);
+  const [level, setLevel] = useState(0);
+  const [status, setStatus] = useState<'connecting' | 'live' | 'analysing' | 'failed'>('connecting');
+  const [error, setError] = useState('');
+  const [lastLatency, setLastLatency] = useState<number | null>(null);
+  const clientRef = useRef<VoiceClient | null>(null);
 
   useEffect(() => {
     const i = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(i);
   }, []);
 
+  useEffect(() => {
+    let disposed = false;
+    const client = new VoiceClient({
+      onLevel: (rms) => setLevel(Math.min(100, rms * 400)),
+      onServerMessage: (m: ServerMessage) => {
+        if (m.type === 'ready') setStatus('live');
+        else if (m.type === 'barge_in') client.stopPlayback();
+        else if (m.type === 'latency' && m.endToFirstAudioMs) setLastLatency(m.endToFirstAudioMs);
+        else if (m.type === 'analysing') setStatus('analysing');
+        else if (m.type === 'report') onEnd();
+        else if (m.type === 'error') { setStatus('failed'); setError(m.message); }
+      },
+      onClose: () => { if (!disposed) setStatus((s) => (s === 'analysing' ? s : 'failed')); },
+    });
+    clientRef.current = client;
+
+    client
+      .connect({
+        scenarioId: 'executive-interview',
+        personaId: 'skeptical-executive-interviewer',
+        language: lang,
+      })
+      .catch((e: unknown) => {
+        setStatus('failed');
+        setError(e instanceof Error ? e.message : String(e));
+      });
+
+    return () => { disposed = true; client.dispose(); };
+  }, [lang, onEnd]);
+
   const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
   const ss = String(elapsed % 60).padStart(2, '0');
   const over = elapsed > minutes * 60;
+
+  if (status === 'failed') {
+    return (
+      <div className="py-16 text-center">
+        <h1 className="mb-3 text-xl font-semibold text-ink">
+          {t('The session could not start', 'تعذر بدء الجلسة')}
+        </h1>
+        <p className="mx-auto mb-2 max-w-readable text-sm leading-relaxed text-muted">{error}</p>
+        <p className="mx-auto mb-8 max-w-readable text-xs leading-relaxed text-faint">
+          {t(
+            'The live voice loop needs the session server: run `npm run dev:live` rather than `npm run dev`. Provider keys are also required for real speech — without them the persona is silent.',
+            'حلقة الصوت المباشرة تحتاج خادم الجلسة: شغّل `npm run dev:live` بدلاً من `npm run dev`. كما تلزم مفاتيح المزودين للصوت الحقيقي — بدونها يبقى المحاور صامتاً.',
+          )}
+        </p>
+        <Button variant="secondary" href={`/report?lang=${lang}`}>
+          {t('Open the worked example instead', 'افتح المثال العملي بدلاً من ذلك')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === 'analysing') {
+    return (
+      <div className="py-24 text-center">
+        <div className="mx-auto mb-6 h-1 w-32 overflow-hidden rounded-full bg-line">
+          <div className="h-full w-1/3 animate-pulse rounded-full bg-accent" />
+        </div>
+        <p className="text-sm text-muted">{t('Analysing…', 'جارٍ التحليل…')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
       <div className="relative mb-10 flex h-28 w-28 items-center justify-center">
         <span className="pulse-ring absolute inset-0 rounded-full bg-accent/20" />
-        <span className="relative flex h-20 w-20 items-center justify-center rounded-full border border-accent/40 bg-accent/10">
+        <span
+          className="relative flex items-center justify-center rounded-full border border-accent/40 bg-accent/10 transition-[width,height] duration-100"
+          style={{ width: 72 + level * 0.28, height: 72 + level * 0.28 }}
+        >
           <span className="h-3 w-3 rounded-full bg-accent" />
         </span>
       </div>
@@ -318,16 +389,25 @@ function Live({ lang, minutes, onEnd }: { lang: Lang; minutes: number; onEnd: ()
       <div className={`nums mb-2 font-mono text-4xl tabular-nums ${over ? 'text-caution' : 'text-ink'}`}>
         {mm}:{ss}
       </div>
+
       <p className="mb-10 max-w-sm text-sm leading-relaxed text-faint">
-        {t(
-          'Nothing is shown while you speak. A live transcript or filler counter would take attention away from the conversation — and induce the hesitation it measures.',
-          'لا يُعرض شيء أثناء حديثك. النص المباشر أو عدّاد الحشو يسحب الانتباه من المحادثة — ويُحدث التردد الذي يقيسه.',
-        )}
+        {status === 'connecting'
+          ? t('Connecting…', 'جارٍ الاتصال…')
+          : t(
+              'Nothing is shown while you speak. A live transcript or filler counter would take attention away from the conversation — and induce the hesitation it measures.',
+              'لا يُعرض شيء أثناء حديثك. النص المباشر أو عدّاد الحشو يسحب الانتباه من المحادثة — ويُحدث التردد الذي يقيسه.',
+            )}
       </p>
 
-      <Button variant="secondary" onClick={onEnd}>
+      <Button variant="secondary" onClick={() => clientRef.current?.end()}>
         {t('End session', 'إنهاء الجلسة')}
       </Button>
+
+      {lastLatency !== null && (
+        <p className="nums mt-6 font-mono text-[10px] text-faint">
+          reply latency {lastLatency}ms
+        </p>
+      )}
     </div>
   );
 }

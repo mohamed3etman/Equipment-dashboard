@@ -16,8 +16,16 @@ the comparison that says whether attempt 2 was actually better.
 npm install
 npm run config:validate     # every rubric, scenario, persona, lexicon
 npm test                    # 62 tests
-npm run dev                 # http://localhost:3000
+npm run dev:live            # http://localhost:3000 — app + voice socket
 ```
+
+Use `npm run dev:live` (custom server), not `npm run dev`. Plain `next dev`
+serves the pages but not `/ws/session`, so a live session cannot connect.
+
+**One operational trap:** `dev:live` and `build` share the `.next` directory and
+clobber each other's artefacts. After running one, `rm -rf .next` before the
+other, or you will get 404s on chunks (dev after build) or a missing
+`vendor-chunks` module (build after dev).
 
 **No API keys are required to run it.** With none set, mock providers serve the
 whole journey — transcript, metrics, evidence-checked evaluation, retry,
@@ -145,20 +153,26 @@ src/
 - Passes 1–4 with structured output and enforced evidence
 - Retry comparison with an honest verdict
 - Live orchestrator: barge-in, sentence-boundary TTS, per-stage latency
-- Real microphone check (hard gate — no skip link)
-- Report UI: light/dark, LTR/RTL, mobile-clean
+- **Audio path wired end to end**: browser AudioWorklet captures 16 kHz PCM16 →
+  WebSocket → STT → persona LLM → TTS → scheduled gapless playback. Verified in
+  a real browser: handshake, persona speaks first, audio frames stream back.
+- Real microphone check — a hard gate requiring permission, measurable signal,
+  **and** playback before Start enables. Verified in Chromium with a fake device.
+- Report UI: light/dark, LTR/RTL, mobile-clean, zero page errors
 - 62 tests
 
 ## What is stubbed or not built
 
-- **Audio path is not wired end-to-end.** The orchestrator, providers and mic
-  check exist and are tested; the browser↔server WebSocket bridge is not yet
-  written, so a live voice session does not yet run.
 - **Nothing is persisted.** The Drizzle schema is written; no migrations, no
-  writes. The report renders from a scripted run.
+  writes. The report renders from a scripted run rather than from a stored
+  session, and ending a live session analyses in memory then discards.
 - Communication memory, baseline mode, events, progress: schema only.
 - Deepgram / ElevenLabs adapters are written against their documented APIs but
-  have not been executed — no keys in this environment.
+  **have never been executed** — there are no keys in this environment. The
+  socket, orchestrator and playback path are proven with mock providers only,
+  so first contact with real vendors should be treated as untested code.
+- Only one scenario and one persona exist. The other five are specified in the
+  Phase 0 analysis, not built.
 
 ## Deliberately excluded
 
