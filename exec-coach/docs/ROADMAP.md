@@ -16,5 +16,5 @@ Each milestone ends with a demonstrable result and acceptance criteria. Nothing 
 
 ## Working principles
 - The coaching quality gate comes before UI polish. M2–M4 are judged on transcripts, not screenshots.
-- Every prompt is versioned in `src/prompts/`, with a short changelog in `docs/DECISIONS.md`.
+- Every prompt is versioned in `src/prompts/`, with decisions logged in `docs/ARCHITECTURE.md` §4.
 - Golden-transcript fixtures in `test/fixtures/` (weak, average and strong answers) are used to check grader consistency.
