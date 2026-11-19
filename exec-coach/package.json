@@ -1,0 +1,20 @@
+{
+  "name": "exec-coach",
+  "version": "1.0.0",
+  "description": "Personal AI executive communication & English coach",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "adhan": "^4.4.6"
+  },
+  "type": "module"
+}
