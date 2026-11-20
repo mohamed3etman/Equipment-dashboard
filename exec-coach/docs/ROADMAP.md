@@ -5,7 +5,7 @@ Each milestone ends with a demonstrable result and acceptance criteria. Nothing 
 | # | Milestone | Deliverable | Acceptance criteria | Status |
 |---|---|---|---|---|
 | M0 | Phase 1: assessment and architecture | `docs/ARCHITECTURE.md`, tested Fajr engine | Fajr within 2 min of the reference for 730 days | ✅ Done (0.51 min worst) |
-| M1 | **Voice loop spike (go/no-go for Option A)** | Minimal artifact: coach speaks, you dictate, Claude replies, the reply is spoken | On your machine: 5 voice turns with no errors; latency logged; capability fallbacks verified | Next |
+| M1 | **Voice loop spike (go/no-go for Option A)** | `app/voice-check.html`, published privately at claude.ai/artifact/XwxfjFad1gwtCzRxsaJsUF; logs per-turn latency to the `voicecheck` collection | On your machine: 5 voice turns with no errors; latency logged; capability fallbacks verified | Built, awaiting your test run |
 | M2 | Coaching engine | Planner, Coach and orchestrator; all 6 segments; soft timer; transcript capture; Arabic-gloss rule | One full 15-min session end to end; one question at a time; role-play stays in character; ideal answer never leaked | |
 | M3 | Grader and scoring | Grader passes 1 and 2; deterministic metrics; pronunciation-N/A renormalisation; scorecard | Every score cites a transcript quote; the same transcript graded twice stays within ±5 points; corrections capped at 3 | |
 | M4 | Learner memory and adaptation | db schema; error-pattern register; phrase spaced repetition; curriculum gates; weekly and monthly assessment days | Day 2 plan visibly targets day 1 weaknesses; due phrases reappear; stage gate logic unit-tested | |

@@ -1,0 +1,282 @@
+<title>Coach Voice Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one calm column — session header, readiness strip, conversation, one primary control pinned at the bottom of the card */
+:root{
+  --bg:#eef2f4; --surface:#ffffff; --ink:#13202a; --muted:#566673; --line:#d6dee4;
+  --accent:#1d5d78; --accent-ink:#ffffff; --coach:#e3ecf0;
+  --good:#2b7a4b; --warn:#9a6300; --bad:#ae3838;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161b; --surface:#16212a; --ink:#e4ecf1; --muted:#93a4b1; --line:#2a3946;
+  --accent:#5fa9c9; --accent-ink:#06141b; --coach:#1d2c37;
+  --good:#5cc08a; --warn:#e0a640; --bad:#ec7b7b; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f161b; --surface:#16212a; --ink:#e4ecf1; --muted:#93a4b1; --line:#2a3946;
+  --accent:#5fa9c9; --accent-ink:#06141b; --coach:#1d2c37;
+  --good:#5cc08a; --warn:#e0a640; --bad:#ec7b7b; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+.wrap{max-width:680px;margin:0 auto;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-weight:600;font-size:clamp(24px,5vw,30px);line-height:1.15;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:60ch}
+.when{font:400 13px/1.4 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.when b{color:var(--ink);font-weight:500}
+.checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.checks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.check{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:4px;min-width:0}
+.check .k{font-size:13px;font-weight:500}
+.pill{font:500 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line)}
+.pill[data-s="ready"]{color:var(--good)} .pill[data-s="ready"]::before{background:var(--good)}
+.pill[data-s="off"]{color:var(--bad)} .pill[data-s="off"]::before{background:var(--bad)}
+.pill[data-s="limited"]{color:var(--warn)} .pill[data-s="limited"]::before{background:var(--warn)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;display:grid}
+.log{padding:18px;display:grid;gap:12px;min-height:220px;align-content:start}
+.msg{max-width:85%;padding:10px 14px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.coach{background:var(--coach);justify-self:start;border-bottom-left-radius:4px}
+.msg.me{background:var(--accent);color:var(--accent-ink);justify-self:end;border-bottom-right-radius:4px}
+.msg.live{opacity:.7;font-style:italic}
+.msg .meta{display:block;margin-top:6px;font:400 11px/1.3 var(--mono);opacity:.75;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:14px}
+.controls{border-top:1px solid var(--line);padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:500 15px/1 var(--sans);border-radius:999px;padding:12px 20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{font:400 13px/1.4 var(--mono);color:var(--muted);flex:1 1 180px;min-width:0}
+.typed{display:flex;gap:8px;flex:1 1 100%}
+.typed input{flex:1;min-width:0;font:15px var(--sans);padding:11px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.results{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:10px}
+.results h2{font-size:16px;margin:0}
+table{width:100%;border-collapse:collapse;font:13px/1.4 var(--mono);font-variant-numeric:tabular-nums}
+td,th{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)} th{color:var(--muted);font-weight:500}
+.note{color:var(--muted);font-size:13px;margin:0}
+@media (prefers-reduced-motion:no-preference){.msg{animation:in .18s ease-out}}
+@keyframes in{from{transform:translateY(4px)}to{transform:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Milestone 1 · Voice check</span>
+    <h1>Five spoken turns with your coach</h1>
+    <p class="sub">This short test confirms that voice, speech recognition, coaching replies and memory all work on this device before the full 15-minute session is built.</p>
+    <p class="when" id="when">Calculating today's session time…</p>
+  </header>
+
+  <section class="checks" aria-label="Device readiness">
+    <div class="check"><span class="k">Coach voice</span><span class="pill" id="c-tts">Checking</span></div>
+    <div class="check"><span class="k">Your microphone</span><span class="pill" id="c-dict">Checking</span></div>
+    <div class="check"><span class="k">Coaching brain</span><span class="pill" id="c-sample">Checking</span></div>
+    <div class="check"><span class="k">Memory</span><span class="pill" id="c-db">Checking</span></div>
+  </section>
+
+  <section class="card" aria-label="Conversation">
+    <div class="log" id="log" aria-live="polite">
+      <p class="empty" id="empty">Press <b>Start</b>. The coach asks one question out loud; you answer by voice, then press <b>Done</b>.</p>
+    </div>
+    <div class="controls">
+      <button class="primary" id="main" disabled>Start</button>
+      <button id="interrupt" hidden>Stop coach</button>
+      <span class="status" id="status">Getting ready…</span>
+      <form class="typed" id="typed" hidden>
+        <input id="typedInput" autocomplete="off" placeholder="Microphone unavailable here. Type your answer.">
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="results" id="results" hidden>
+    <h2>Voice check result</h2>
+    <table><thead><tr><th>Turn</th><th>Words</th><th>Speech → text</th><th>Coach thinking</th><th>Voice start</th></tr></thead><tbody id="rows"></tbody></table>
+    <p class="note" id="verdict"></p>
+  </section>
+</div>
+
+<script type="module">
+import { sessionPlan, riyadhToday } from "./fajr.js";
+
+const $ = (id) => document.getElementById(id);
+const TURNS = 5;
+const OPENING = "Good morning. Let's warm up. What is the most important decision on your plate this week, and why does it matter?";
+const COACH_RULES = `You are a senior executive communication coach running a short spoken warm-up with a healthcare executive and entrepreneur (physician, quality and PMO leader, founder of a consulting and technology venture). Reply in natural spoken English.
+Rules: respond to what he actually said; ask exactly ONE follow-up question; at most 45 words; no lists, no markdown, no emojis; sound like a real coach in a one-to-one, warm but direct. Do not correct grammar in this warm-up. If his answer was very short, ask him to expand with a concrete example.`;
+
+// ---------- schedule ----------
+try {
+  const t = riyadhToday(); const p = sessionPlan(t.year, t.month, t.day);
+  $("when").innerHTML = `Makkah Fajr today <b>${p.fajr}</b> · Daily session <b>${p.sessionStart}–${p.sessionEnd}</b> Riyadh time`;
+} catch { $("when").textContent = ""; }
+
+// ---------- capabilities ----------
+const use = (n) => (window.claude?.use ? window.claude.use(n) : Promise.resolve(null));
+const setPill = (id, s, label) => { const el = $(id); el.dataset.s = s; el.textContent = label; };
+let tts, dict, sample, db;
+const run = { id: new Date().toISOString().replace(/[:.]/g, "-"), startedAt: new Date().toISOString(),
+  ua: navigator.userAgent.slice(0, 160), caps: {}, turns: [], language: "en", errors: [] };
+
+const ready = Promise.all([
+  use("tts").then((x) => { tts = x; run.caps.tts = !!x; setPill("c-tts", x ? "ready" : "off", x ? "Ready" : "Not here"); }),
+  use("dictation").then((x) => { dict = x; run.caps.dictation = !!x; setPill("c-dict", x ? "ready" : "limited", x ? "Ready" : "Typing only"); }),
+  use("sample").then((x) => { sample = x; run.caps.sample = !!x; setPill("c-sample", x ? "ready" : "off", x ? "Ready" : "Unavailable"); }),
+  use("db").then((x) => { db = x; run.caps.db = !!x; setPill("c-db", x ? "ready" : "limited", x ? "Ready" : "Not saved"); }),
+]);
+
+ready.then(() => {
+  if (!sample) { status("The coaching brain is unavailable in this view. Open this page signed in to claude.ai."); return; }
+  if (!dict) $("typed").hidden = false;
+  $("main").disabled = false;
+  status(dict ? "Ready. Use Chrome or the Claude desktop app with your microphone allowed." : "Ready in typing mode.");
+});
+
+// ---------- conversation ----------
+const history = []; // {role:"coach"|"me", text}
+let phase = "idle"; // idle | coachSpeaking | listening | thinking | done
+let answered = 0;
+let heard = "", liveEl = null, listenStart = 0;
+
+function status(t) { $("status").textContent = t; }
+function bubble(role, text, meta) {
+  $("empty")?.remove();
+  const el = document.createElement("div");
+  el.className = "msg " + role; el.textContent = text;
+  if (meta) { const m = document.createElement("span"); m.className = "meta"; m.textContent = meta; el.append(m); }
+  $("log").append(el); el.scrollIntoView({ block: "nearest" }); return el;
+}
+function setMain(label, disabled = false) { $("main").textContent = label; $("main").disabled = disabled; }
+
+async function say(text) {
+  bubble("coach", text);
+  if (!tts) return null;
+  phase = "coachSpeaking"; $("interrupt").hidden = false;
+  const t0 = performance.now(); let firstSound = null;
+  const off = tts.onState(({ state }) => { if (state === "speaking" && firstSound === null) firstSound = performance.now() - t0; });
+  try { await tts.speak(text, { language: "en" }); }
+  catch (e) { if (e?.code !== "stopped") run.errors.push("tts:" + (e?.code || e)); if (e?.code === "not_granted") tts = null; }
+  finally { off?.(); $("interrupt").hidden = true; }
+  return firstSound;
+}
+
+if (window.claude) {
+  // dictation listeners are wired once the capability resolves
+  ready.then(() => {
+    if (!dict) return;
+    dict.onPartial(({ text }) => { if (phase !== "listening") return; liveEl ??= bubble("me live", ""); liveEl.textContent = (heard + " " + text).trim(); });
+    dict.onFinal(({ text }) => { heard = (heard + " " + text).trim(); if (liveEl) liveEl.textContent = heard; });
+    dict.onState(({ state, reason }) => {
+      if (state === "idle" && phase === "listening" && reason && reason !== "stopped") {
+        status(reason === "hidden" ? "Listening paused because the page was hidden. Press Answer again." : "Microphone stopped (" + reason + "). Press Answer again.");
+        phase = "awaitAnswer"; setMain("Answer");
+      }
+    });
+  });
+}
+
+let langFallback = false;
+async function startListening() {
+  heard = ""; liveEl = null; phase = "listening"; listenStart = performance.now();
+  setMain("Done"); status("Listening… speak naturally, then press Done.");
+  try { await dict.start(langFallback ? undefined : { language: "en" }); }
+  catch (e) {
+    const code = e?.code || String(e);
+    run.errors.push("dictation:" + code);
+    if (code === "unavailable" && !langFallback) { langFallback = true; run.language = "default"; status("English recognition unavailable; press Answer to try your default language."); }
+    else if (code === "not_granted") { dict = null; $("typed").hidden = false; status("Microphone not allowed. Type your answer instead."); }
+    else status("Couldn't start the microphone (" + code + "). Press Answer to retry.");
+    phase = "awaitAnswer"; setMain("Answer", !dict);
+  }
+}
+
+async function finishAnswer(typedText) {
+  let sttMs = null;
+  const speakSec = Math.round((performance.now() - listenStart) / 1000);
+  if (typedText == null) {
+    setMain("Done", true); status("Finishing transcription…");
+    const t0 = performance.now();
+    try { await dict.stop(); } catch (e) { run.errors.push("stop:" + (e?.code || e)); }
+    sttMs = Math.round(performance.now() - t0);
+  }
+  const text = (typedText ?? heard).trim();
+  liveEl?.remove(); liveEl = null;
+  if (!text) { status("I didn't catch anything. Press Answer and try again."); phase = "awaitAnswer"; setMain("Answer"); return; }
+  bubble("me", text);
+  history.push({ role: "me", text }); answered++;
+  const words = text.split(/\s+/).length;
+
+  phase = "thinking"; setMain("Coach is thinking", true); status("Coach is thinking…");
+  const final = answered >= TURNS;
+  const transcript = history.map((h) => (h.role === "coach" ? "COACH: " : "EXECUTIVE: ") + h.text).join("\n");
+  const ask = `${COACH_RULES}\n\nConversation so far:\n${transcript}\n\n${final
+    ? "This was his last answer in the warm-up. Respond briefly to it, then close in 2 sentences: thank him and say the full session is coming soon. No question."
+    : "Write your next spoken turn."}`;
+  const t1 = performance.now(); let reply;
+  try { reply = (await sample(ask, { modelTier: "default", cache: false })).text.trim(); }
+  catch (e) { run.errors.push("sample:" + (e?.code || e)); status(e?.code === "rate_limited" ? "Usage limit reached. Wait a minute, then press Retry." : "Coach reply failed (" + (e?.code || "error") + "). Press Retry.");
+    history.pop(); answered--; phase = "retry"; retryText = text; setMain("Retry"); return; }
+  const llmMs = Math.round(performance.now() - t1);
+  history.push({ role: "coach", text: reply });
+  const ttsMs = await say(reply);
+  const turn = { n: answered, words, speakSec: typedText == null ? speakSec : null, typed: typedText != null,
+    sttMs, llmMs, ttsMs: ttsMs == null ? null : Math.round(ttsMs) };
+  run.turns.push(turn); addRow(turn); save();
+  if (final) return finish();
+  phase = "awaitAnswer"; setMain("Answer"); status(dict ? "Your turn. Press Answer and speak." : "Your turn. Type your answer.");
+  if (!dict) $("typedInput").focus();
+}
+let retryText = null;
+
+function addRow(t) {
+  $("results").hidden = false;
+  const tr = document.createElement("tr");
+  const ms = (v) => (v == null ? "—" : (v / 1000).toFixed(1) + " s");
+  tr.innerHTML = `<td>${t.n}</td><td>${t.words}</td><td>${t.typed ? "typed" : ms(t.sttMs)}</td><td>${ms(t.llmMs)}</td><td>${ms(t.ttsMs)}</td>`;
+  $("rows").append(tr);
+}
+
+function finish() {
+  phase = "done"; setMain("Voice check complete", true);
+  const avg = (k) => { const v = run.turns.map((t) => t[k]).filter((x) => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const wait = (avg("sttMs") || 0) + (avg("llmMs") || 0) + (avg("ttsMs") || 0);
+  run.completedAt = new Date().toISOString(); run.avgWaitMs = Math.round(wait);
+  const voiceOk = run.caps.tts && run.caps.dictation && run.turns.every((t) => !t.typed);
+  $("verdict").textContent = voiceOk
+    ? `Voice loop works on this device. Average wait after you finish speaking: ${(wait / 1000).toFixed(1)} s.${db ? " Results saved for the build team." : ""}`
+    : `Completed with limits: ${!run.caps.tts ? "no coach voice here; " : ""}${!run.caps.dictation || run.turns.some((t) => t.typed) ? "answers were typed; " : ""}try Chrome on a computer or the Claude desktop app for full voice.`;
+  status("Done. Thank you.");
+  save();
+}
+
+let saving = Promise.resolve();
+function save() {
+  if (!db) return;
+  saving = saving.then(() => db.collection("voicecheck").doc(run.id).set(JSON.parse(JSON.stringify(run))))
+    .catch((e) => { run.errors.push("db:" + (e?.code || e)); setPill("c-db", "limited", "Not saved"); });
+}
+
+$("main").addEventListener("click", async () => {
+  if (phase === "idle") {
+    setMain("Coach is speaking", true);
+    history.push({ role: "coach", text: OPENING });
+    await say(OPENING);
+    phase = "awaitAnswer"; setMain("Answer"); status(dict ? "Your turn. Press Answer and speak." : "Your turn. Type your answer.");
+    return;
+  }
+  if (phase === "awaitAnswer" && dict) return startListening();
+  if (phase === "listening") return finishAnswer(null);
+  if (phase === "retry" && retryText) { const t = retryText; retryText = null; $("log").lastElementChild?.remove(); return finishAnswer(t); }
+});
+$("interrupt").addEventListener("click", () => { tts?.stop(); });
+$("typed").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("typedInput").value.trim();
+  if (!v || !(phase === "awaitAnswer" || phase === "listening")) return;
+  $("typedInput").value = "";
+  if (phase === "listening") dict?.stop().catch(() => {});
+  finishAnswer(v);
+});
+</script>
