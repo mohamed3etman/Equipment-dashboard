@@ -1,0 +1,471 @@
+<title>Executive Coach</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500&display=swap">
+<style>
+/* Layout: one focused column. Home = today's appointment card. Session = segment rail + live conversation + one big control. Result = scorecard. */
+:root{
+  --bg:#eef2f4; --surface:#ffffff; --sunk:#f6f8f9; --ink:#13202a; --muted:#566673; --line:#d6dee4;
+  --accent:#1d5d78; --accent-ink:#ffffff; --coach:#e3ecf0; --brass:#8a6a2f;
+  --good:#2b7a4b; --warn:#9a6300; --bad:#ae3838;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --arabic:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161b; --surface:#16212a; --sunk:#121b22; --ink:#e4ecf1; --muted:#93a4b1; --line:#2a3946;
+  --accent:#5fa9c9; --accent-ink:#06141b; --coach:#1d2c37; --brass:#d1b071;
+  --good:#5cc08a; --warn:#e0a640; --bad:#ec7b7b; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f161b; --surface:#16212a; --sunk:#121b22; --ink:#e4ecf1; --muted:#93a4b1; --line:#2a3946;
+  --accent:#5fa9c9; --accent-ink:#06141b; --coach:#1d2c37; --brass:#d1b071;
+  --good:#5cc08a; --warn:#e0a640; --bad:#ec7b7b; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:18px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-weight:600;font-size:clamp(24px,5vw,32px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-weight:600;font-size:17px;margin:0;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;min-width:0}
+button{font:500 15px/1 var(--sans);border-radius:999px;padding:13px 22px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.big{font-size:17px;padding:16px 28px}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pill{font:500 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line)}
+.pill[data-s="ready"]{color:var(--good)} .pill[data-s="ready"]::before{background:var(--good)}
+.pill[data-s="off"]{color:var(--bad)} .pill[data-s="off"]::before{background:var(--bad)}
+.pill[data-s="limited"]{color:var(--warn)} .pill[data-s="limited"]::before{background:var(--warn)}
+
+/* Home */
+.appt{display:grid;grid-template-columns:auto 1fr;gap:6px 20px;align-items:baseline}
+.appt .time{font:500 clamp(34px,8vw,44px)/1 var(--mono);font-variant-numeric:tabular-nums;grid-row:span 2}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{background:var(--sunk);border-radius:10px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.stat b{font:500 20px/1.2 var(--mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.spark{display:flex;align-items:flex-end;gap:3px;height:36px}
+.spark i{flex:1;max-width:14px;background:var(--accent);opacity:.75;border-radius:2px 2px 0 0;min-height:2px}
+.caps{display:flex;flex-wrap:wrap;gap:8px 16px}
+
+/* Session */
+.rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.rail div{height:4px;border-radius:2px;background:var(--line)}
+.rail div.done{background:var(--accent);opacity:.5} .rail div.on{background:var(--accent)}
+.seghead{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.clock{font:500 14px/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.log{display:grid;gap:12px;align-content:start;max-height:min(52vh,520px);overflow-y:auto;padding:4px 2px}
+.msg{max-width:88%;padding:10px 14px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.coach{background:var(--coach);justify-self:start;border-bottom-left-radius:4px}
+.msg.coach.role{border-left:3px solid var(--brass)}
+.msg.coach .who{display:block;font:500 11px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--brass);margin-bottom:4px}
+.msg.me{background:var(--accent);color:var(--accent-ink);justify-self:end;border-bottom-right-radius:4px}
+.msg.live{opacity:.7;font-style:italic}
+.ar{font-family:var(--arabic);direction:rtl;unicode-bidi:isolate}
+.note{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:14px}
+.phrases{display:grid;gap:8px}
+.phrase{display:grid;gap:2px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
+.phrase b{font-weight:600}
+.phrase .ar{color:var(--muted);font-size:14px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:14px}
+.status{font:400 13px/1.4 var(--mono);color:var(--muted);flex:1 1 200px;min-width:0}
+.count{font:500 22px/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--accent)}
+.count.over{color:var(--warn)}
+.typed{display:flex;gap:8px;flex:1 1 100%}
+.typed input{flex:1;min-width:0;font:15px var(--sans);padding:12px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.typed input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Result */
+.score{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.score .big{font:500 clamp(48px,12vw,64px)/1 var(--mono);font-variant-numeric:tabular-nums}
+.dims{display:grid;gap:12px}
+.dim{display:grid;gap:4px}
+.dim .top{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.dim .top b{font:500 14px var(--mono);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.dim q{font-size:13px;color:var(--muted)}
+.dim.na .top b{color:var(--muted)}
+.corr{display:grid;gap:4px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
+.corr .said{text-decoration:line-through;text-decoration-color:var(--bad);color:var(--muted)}
+.corr .exec{font-weight:500}
+.tag{font:500 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--brass)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.callout{border-left:3px solid var(--brass);padding:4px 0 4px 12px}
+@media (prefers-reduced-motion:no-preference){.msg{animation:in .18s ease-out}}
+@keyframes in{from{transform:translateY(4px)}to{transform:none}}
+</style>
+
+<div class="wrap">
+  <!-- HOME -->
+  <section id="home" class="wrap" style="gap:18px">
+    <header style="display:grid;gap:6px">
+      <span class="eyebrow" id="today">Today</span>
+      <h1>Good morning, Mohamed.</h1>
+    </header>
+    <div class="panel">
+      <div class="appt">
+        <span class="time" id="sessTime">--:--</span>
+        <span class="eyebrow">Today's session · 15 min</span>
+        <span class="muted mono" id="fajrLine">Calculating…</span>
+      </div>
+      <p id="focusLine" class="muted">Your first session sets the baseline: warm-up, a fluency challenge, an executive role-play, targeted corrections, three power phrases and a final challenge.</p>
+      <div class="row">
+        <button class="primary big" id="begin" disabled>Begin today's session</button>
+        <span class="status" id="homeStatus">Checking your device…</span>
+      </div>
+      <div class="caps">
+        <span class="pill" id="c-tts">Coach voice</span>
+        <span class="pill" id="c-dict">Microphone</span>
+        <span class="pill" id="c-sample">Coaching brain</span>
+        <span class="pill" id="c-db">Progress memory</span>
+      </div>
+    </div>
+    <div class="panel" id="progress" hidden>
+      <div class="seghead"><h2>Your progress</h2><span class="eyebrow" id="stageLine"></span></div>
+      <div class="stats">
+        <div class="stat"><b id="stSessions">0</b><span>sessions</span></div>
+        <div class="stat"><b id="stLast">–</b><span>last score /100</span></div>
+        <div class="stat"><b id="stAvg">–</b><span>7-session average</span></div>
+      </div>
+      <div class="spark" id="spark" aria-label="Recent scores"></div>
+    </div>
+  </section>
+
+  <!-- SESSION -->
+  <section id="session" class="panel" hidden>
+    <div class="rail" id="rail"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    <div class="seghead"><h2 id="segName">Preparing</h2><span class="clock" id="clock">00:00</span></div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="note" id="arNote" hidden></div>
+    <div class="phrases" id="phraseCard" hidden></div>
+    <div class="controls">
+      <button class="primary big" id="main" disabled>Answer</button>
+      <span class="count" id="count" hidden></span>
+      <button id="stopCoach" hidden>Stop coach</button>
+      <span class="status" id="status"></span>
+      <form class="typed" id="typed" hidden>
+        <input id="typedInput" autocomplete="off" placeholder="Type your answer">
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <p class="muted" style="font-size:12px">Tip: press the space bar to start and finish each answer.</p>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="wrap" hidden style="gap:18px"></section>
+</div>
+
+<script type="module">
+import { createSession, SEGMENTS, STAGES } from "./engine.js";
+import { emptyProfile, updateProfile, planInputs, dayTypeFor } from "./profile.js";
+import { sessionPlan, riyadhToday } from "./fajr.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const NAME = "Mohamed";
+
+// ---------- date & schedule (Asia/Riyadh) ----------
+const rt = riyadhToday();
+const DATE = sessionPlan(rt.year, rt.month, rt.day).date;
+const WEEKDAY = new Date(Date.UTC(rt.year, rt.month - 1, rt.day)).getUTCDay();
+const WEEKDAY_NAME = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][WEEKDAY];
+{
+  const p = sessionPlan(rt.year, rt.month, rt.day);
+  $("today").textContent = `${WEEKDAY_NAME} · ${DATE} · Riyadh`;
+  $("sessTime").textContent = p.sessionStart;
+  $("fajrLine").textContent = `Fajr in Makkah ${p.fajr} · session ${p.sessionStart}–${p.sessionEnd}`;
+}
+
+// ---------- capabilities ----------
+const use = (n) => (window.claude?.use ? window.claude.use(n) : Promise.resolve(null));
+const pill = (id, s, label) => { $(id).dataset.s = s; $(id).textContent = label; };
+let tts, dict, sample, db, user, uid = null;
+let profile = emptyProfile(), profileVersionKnown = false;
+
+const ready = Promise.all([
+  use("tts").then((x) => { tts = x; pill("c-tts", x ? "ready" : "off", x ? "Coach voice" : "No coach voice here"); }),
+  use("dictation").then((x) => { dict = x; pill("c-dict", x ? "ready" : "limited", x ? "Microphone" : "Typing only"); }),
+  use("sample").then((x) => { sample = x; pill("c-sample", x ? "ready" : "off", x ? "Coaching brain" : "Coach unavailable"); }),
+  use("db").then((x) => { db = x; }),
+  use("user").then((x) => { user = x; }),
+]).then(async () => {
+  try { if (db && user) uid = await user.id(); } catch { uid = null; }
+  if (db && uid) {
+    try {
+      const snap = await withTimeout(db.doc(`data/users/${uid}/profile`).get(), 10000);
+      const d = snap?.data?.() ?? snap?.data ?? null;
+      if (d && d.version) profile = { ...emptyProfile(), ...d };
+      profileVersionKnown = true;
+      pill("c-db", "ready", "Progress memory");
+    } catch { pill("c-db", "limited", "Memory unavailable"); }
+  } else pill("c-db", "limited", "Not saved");
+  renderHome();
+  if (!sample) { $("homeStatus").textContent = "Open this page signed in to claude.ai to start a session."; return; }
+  $("begin").disabled = false;
+  $("homeStatus").textContent = tts && dict ? "Ready. Best on a computer with Chrome or the Claude desktop app."
+    : "Voice is limited on this device. You can still practise by typing; for full voice use a computer.";
+});
+
+function withTimeout(p, ms) { return Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("timeout")), ms))]); }
+
+function renderHome() {
+  const h = profile.history || [];
+  const todayDone = h.some((x) => x.date === DATE);
+  if (todayDone) { $("begin").textContent = "Practise again today"; }
+  if (profile.focus?.[0]) $("focusLine").innerHTML = `<b>Today's focus:</b> ${esc(profile.focus[0])}`;
+  if (!h.length) return;
+  $("progress").hidden = false;
+  const st = STAGES[(profile.stage || 1) - 1];
+  $("stageLine").textContent = `Stage ${st.n} · ${st.name}`;
+  $("stSessions").textContent = profile.sessions;
+  $("stLast").textContent = h.at(-1).normalized;
+  const last7 = h.slice(-7);
+  $("stAvg").textContent = Math.round(last7.reduce((a, x) => a + x.normalized, 0) / last7.length);
+  $("spark").innerHTML = h.slice(-20).map((x) => `<i style="height:${Math.max(4, x.normalized)}%" title="${esc(x.date)}: ${x.normalized}"></i>`).join("");
+}
+
+// ---------- persistence ----------
+let saveChain = Promise.resolve();
+function persist(fn) { if (!db || !uid) return; saveChain = saveChain.then(fn).catch((e) => console.warn("save failed", e)); }
+function saveSession(status) {
+  const s = engine.state;
+  const doc = JSON.parse(JSON.stringify({
+    kind: "session", date: DATE, status, startedAt: new Date(s.startedAt).toISOString(), promptVersion: s.promptVersion,
+    stage: s.stage, plan: s.plan, transcript: s.transcript, result: s.result, calls: s.log, device: { tts: !!tts, dictation: !!dict },
+  }));
+  persist(() => db.collection(`data/users/${uid}`).doc(`session-${sessionId}`).set(doc));
+}
+
+// ---------- speech ----------
+let phase = "idle"; // idle | coach | await | listening | thinking | done
+let heard = "", partial = "", liveEl = null, listenStart = 0, eventTimes = [];
+let engine, sessionId, timerId, countId;
+
+function status(t) { $("status").textContent = t; }
+function bubble(cls, text, who) {
+  const el = document.createElement("div");
+  el.className = "msg " + cls;
+  if (who) { const w = document.createElement("span"); w.className = "who"; w.textContent = who; el.append(w); }
+  el.append(document.createTextNode(text));
+  $("log").append(el); $("log").scrollTop = $("log").scrollHeight; return el;
+}
+function setMain(label, disabled = false) { $("main").textContent = label; $("main").disabled = disabled; }
+
+async function speak(text, who) {
+  if (!text) return;
+  bubble("coach" + (who ? " role" : ""), text, who);
+  if (!tts || phase === "listening") return;
+  phase = "coach"; $("stopCoach").hidden = false; setMain("Interrupt and answer", !dict);
+  try { await tts.speak(text, { language: "en" }); }
+  catch (e) { if (e?.code === "not_granted") { tts = null; } }
+  finally { $("stopCoach").hidden = true; if (phase === "coach") phase = "thinking"; }
+}
+
+if (true) ready.then(() => {
+  if (!dict) return;
+  dict.onPartial(({ text }) => { if (phase !== "listening") return; partial = text; eventTimes.push(performance.now()); liveEl ??= bubble("me live", ""); liveEl.textContent = (heard + " " + text).trim(); });
+  dict.onFinal(({ text }) => { heard = (heard + " " + text).trim(); partial = ""; eventTimes.push(performance.now()); if (liveEl) liveEl.textContent = heard; });
+  dict.onState(({ state, reason }) => {
+    if (state === "idle" && phase === "listening" && reason && reason !== "stopped") {
+      status(reason === "hidden" ? "Listening paused because the page was hidden. Press Answer to continue." : `Microphone stopped (${reason}). Press Answer to continue.`);
+      phase = "await"; setMain("Answer");
+    }
+  });
+});
+
+function startListening() {
+  if (phase === "coach") tts?.stop();
+  heard = ""; partial = ""; eventTimes = []; liveEl = null;
+  phase = "listening"; listenStart = performance.now();
+  setMain("Done"); status("Listening… take your time, then press Done.");
+  startCountdown();
+  dict.start({ language: "en" }).catch((e) => {
+    const code = e?.code || "error";
+    if (code === "not_granted") { dict = null; $("typed").hidden = false; status("Microphone not allowed. Type your answers instead."); setMain("Answer", true); }
+    else status(`Couldn't start the microphone (${code}). Press Answer to retry.`);
+    phase = "await"; stopCountdown(); if (dict) setMain("Answer");
+  });
+}
+
+function startCountdown() {
+  const segId = engine.segment().id;
+  const secs = segId === "fluency" ? engine.state.plan.fluency.seconds : segId === "final" ? engine.state.plan.final.seconds : 0;
+  if (!secs) return;
+  const t0 = performance.now(); $("count").hidden = false;
+  const tick = () => { const left = Math.round(secs - (performance.now() - t0) / 1000); $("count").textContent = left >= 0 ? left + "s" : "time"; $("count").classList.toggle("over", left < 0); };
+  tick(); countId = setInterval(tick, 250);
+}
+function stopCountdown() { clearInterval(countId); $("count").hidden = true; }
+
+async function finishListening() {
+  stopCountdown();
+  const durationSec = Math.round((performance.now() - listenStart) / 1000);
+  const rel = eventTimes.map((t) => t - listenStart);
+  const snapshot = (heard + " " + partial).trim();
+  const stopped = dict.stop().catch(() => {});
+  if (!snapshot) {
+    setMain("Done", true); status("Finishing transcription…");
+    await stopped;
+    const text = heard.trim();
+    liveEl?.remove(); liveEl = null;
+    if (!text) { phase = "await"; setMain("Answer"); status("I didn't catch that. Press Answer and try again."); return; }
+    return submit(text, { durationSec, eventTimes: rel });
+  }
+  // Reply to the snapshot now; patch the stored answer when the settled transcript arrives.
+  stopped.then(() => { const settled = heard.trim(); if (settled && engine.amendLastAnswer(settled, { durationSec, eventTimes: rel }) && myBubble) myBubble.textContent = settled; });
+  liveEl?.remove(); liveEl = null;
+  return submit(snapshot, { durationSec, eventTimes: rel });
+}
+
+let myBubble = null, pendingRetry = null;
+async function submit(text, timing) {
+  myBubble = bubble("me", text);
+  phase = "thinking"; setMain("Coach is thinking", true); status(engine.segment().id === "final" ? "Scoring your session…" : "Coach is thinking…");
+  $("arNote").hidden = true;
+  let r;
+  try { r = await engine.respond(text, timing); }
+  catch (e) {
+    myBubble.remove();
+    pendingRetry = { text, timing };
+    phase = "retry"; setMain("Retry");
+    status(e?.code === "rate_limited" ? "Usage limit reached for the moment. Wait a minute, then press Retry." : `The coach didn't respond (${e?.code || "error"}). Press Retry; your answer is kept.`);
+    return;
+  }
+  await deliver(r);
+}
+
+async function deliver(r) {
+  const prevSeg = r.segment.id;
+  updateRail();
+  if (r.arabicNote) { $("arNote").innerHTML = `<span class="ar">${esc(r.arabicNote)}</span>`; $("arNote").hidden = false; }
+  const inRole = prevSeg === "roleplay" && !r.next;
+  await speak(r.say, inRole ? roleName() : null);
+  if (r.next) {
+    phase = "thinking"; setMain("Preparing", true);
+    status(engine.segment().id === "coaching" ? "Reviewing your English from the first half…" : "Next segment…");
+    const intro = await r.next;
+    updateRail();
+    showPhraseCard();
+    saveSession("in_progress");
+    await speak(intro, engine.segment().id === "roleplay" ? roleName() : null);
+  } else saveSession(r.done ? "complete" : "in_progress");
+  if (r.done) return complete(r.result);
+  if (phase === "listening") return; // he interrupted and is already answering
+  phase = "await"; setMain(dict ? "Answer" : "Send", !dict);
+  status(dict ? "Your turn. Press Answer (or space) and speak." : "Your turn. Type your answer.");
+  if (!dict) $("typedInput").focus();
+}
+
+const roleName = () => (engine.state.plan.roleplay.counterpartRole || "Counterpart").replace(/^the /i, "");
+
+function updateRail() {
+  const i = engine.state.seg;
+  [...$("rail").children].forEach((d, k) => { d.className = k < i ? "done" : k === i ? "on" : ""; });
+  $("segName").textContent = `${i + 1} / 6 · ${SEGMENTS[i].label}`;
+}
+function showPhraseCard() {
+  const on = engine.segment().id === "phrases";
+  $("phraseCard").hidden = !on;
+  if (on) $("phraseCard").innerHTML = engine.state.plan.phrases.map((x) =>
+    `<div class="phrase"><b>${esc(x.phrase)}</b><span class="muted">${esc(x.useWhen)}</span><span class="ar">${esc(x.arabic)}</span></div>`).join("");
+}
+
+// ---------- session lifecycle ----------
+$("begin").addEventListener("click", async () => {
+  $("home").hidden = true; $("session").hidden = false;
+  sessionId = `${DATE}-${Date.now().toString(36)}`;
+  engine = createSession({
+    sampleJson: (prompt, { modelTier }) => sample.json(prompt, { modelTier, cache: false }),
+    stage: STAGES[(profile.stage || 1) - 1], name: NAME, weekday: WEEKDAY_NAME,
+  });
+  const t0 = Date.now();
+  timerId = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $("clock").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; }, 1000);
+  if (!dict) $("typed").hidden = false;
+  setMain("Preparing", true); status("Preparing today's session…");
+  const greeting = `Good morning, ${NAME}. Give me a moment to set up today's session.`;
+  const inputs = { ...planInputs(profile), dayType: dayTypeFor(profile, DATE, WEEKDAY) };
+  const planned = engine.begin(inputs);
+  phase = "coach";
+  await speak(greeting);
+  let first;
+  try { first = await planned; }
+  catch (e) {
+    status(e?.code === "rate_limited" ? "Usage limit reached. Please try again in a few minutes." : "Couldn't prepare the session. Reload the page to try again.");
+    setMain("Unavailable", true); clearInterval(timerId); return;
+  }
+  updateRail();
+  bubble("coach", `Today's theme: ${engine.state.plan.theme}`).classList.add("note");
+  await speak(first.say);
+  phase = "await"; setMain(dict ? "Answer" : "Send", !dict);
+  status(dict ? "Your turn. Press Answer (or space) and speak." : "Your turn. Type your answer.");
+});
+
+$("main").addEventListener("click", () => mainAction());
+function mainAction() {
+  if (phase === "retry" && pendingRetry) { const { text, timing } = pendingRetry; pendingRetry = null; return submit(text, timing); }
+  if (!dict) return;
+  if (phase === "await" || phase === "coach") return startListening();
+  if (phase === "listening") return finishListening();
+}
+$("stopCoach").addEventListener("click", () => tts?.stop());
+document.addEventListener("keydown", (e) => {
+  if (e.code !== "Space" || e.repeat || $("session").hidden || e.target.closest?.("input,button,textarea")) return;
+  e.preventDefault(); if (!$("main").disabled) mainAction();
+});
+$("typed").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("typedInput").value.trim();
+  if (!v || !["await", "coach", "listening"].includes(phase)) return;
+  if (phase === "coach") tts?.stop();
+  if (phase === "listening") { dict?.stop().catch(() => {}); stopCountdown(); liveEl?.remove(); liveEl = null; }
+  $("typedInput").value = "";
+  submit(v, {});
+});
+
+// ---------- result ----------
+const DIM_LABEL = { fluency: "Fluency", clarity: "Clarity", vocabulary: "Vocabulary", grammar: "Grammar", executivePresence: "Executive presence" };
+function complete(r) {
+  clearInterval(timerId); phase = "done";
+  const before = profile;
+  profile = updateProfile(profile, { date: DATE, result: r, plan: engine.state.plan });
+  persist(() => db.doc(`data/users/${uid}/profile`).set(JSON.parse(JSON.stringify(profile))));
+  $("session").hidden = true; $("result").hidden = false;
+  const prev = before.history.at(-1)?.normalized;
+  const delta = prev == null ? "" : `<span class="mono muted">${r.normalized - prev >= 0 ? "+" : ""}${r.normalized - prev} vs last session</span>`;
+  const dims = Object.entries(r.scores).map(([k, v]) => `
+    <div class="dim"><div class="top"><span>${DIM_LABEL[k]}${v.capped ? ' <span class="tag">capped by answer length</span>' : ""}</span><b>${v.score} / ${v.max}</b></div>
+    <div class="bar"><i style="width:${(v.score / v.max) * 100}%"></i></div>
+    ${v.evidence ? `<q>${esc(v.evidence)}</q>` : ""}${v.note ? `<span class="muted" style="font-size:13px">${esc(v.note)}</span>` : ""}</div>`).join("");
+  const m = r.metrics;
+  $("result").innerHTML = `
+    <header style="display:grid;gap:6px"><span class="eyebrow">${esc(DATE)} · ${esc(r.theme)}</span><h1>Today's scorecard</h1></header>
+    <div class="panel">
+      <div class="score"><span class="big">${r.normalized}</span><span class="mono muted">/ 100 · ${r.rawTotal} of ${r.outOf} assessable points</span>${delta}</div>
+      <div class="dims">${dims}
+        <div class="dim na"><div class="top"><span>Pronunciation &amp; delivery</span><b>N/A</b></div><span class="muted" style="font-size:13px">Not scored: this app hears your words, not your audio.</span></div>
+      </div>
+      ${r.confidence ? `<p><b>Confidence:</b> <span class="mono">${esc(r.confidence.score)} / ${esc(r.confidence.outOf || 10)}</span> <span class="muted">· ${esc(r.confidence.evidence)}</span></p>` : ""}
+    </div>
+    ${r.strongest ? `<div class="panel"><h2>Strongest moment</h2><p>${esc(r.strongest.point)}</p>${r.strongest.quote ? `<p class="callout muted">“${esc(r.strongest.quote)}”</p>` : ""}</div>` : ""}
+    <div class="panel"><h2>Tomorrow's focus</h2><p>${esc(r.tomorrowFocus)}</p></div>
+    ${r.corrections.length ? `<div class="panel"><h2>Your corrections</h2>${r.corrections.map((c) => `<div class="corr"><span class="tag">${esc(c.category)}</span><span class="said">${esc(c.said)}</span><span>${esc(c.natural)}</span><span class="exec">${esc(c.executive)}</span></div>`).join("")}</div>` : ""}
+    <div class="panel"><h2>Power phrases</h2><div class="phrases">${r.phrases.map((x) => `<div class="phrase"><b>${esc(x.phrase)}</b><span class="muted">${esc(x.useWhen)}</span><span class="ar">${esc(x.arabic)}</span>${r.phrasesUsed.includes(x.phrase) ? '<span class="tag">used today</span>' : ""}</div>`).join("")}</div></div>
+    ${r.roleplayModel ? `<div class="panel"><h2>How a top executive might have answered</h2><p class="callout">${esc(r.roleplayModel)}</p></div>` : ""}
+    <div class="panel"><h2>Measured</h2><div class="kv">
+      <div class="stat"><b>${m.avgWordsPerAnswer}</b><span>words per answer</span></div>
+      <div class="stat"><b>${m.longestAnswerWords}</b><span>longest answer</span></div>
+      <div class="stat"><b>${m.avgWpm ?? "–"}</b><span>words per minute</span></div>
+      <div class="stat"><b>${m.longPauses ?? "–"}</b><span>pauses over 2.5 s</span></div>
+      <div class="stat"><b>${m.fillersPer100Words}</b><span>fillers per 100 words*</span></div>
+      <div class="stat"><b>${m.lexicalDiversity ?? "–"}</b><span>vocabulary variety</span></div>
+    </div><p class="muted" style="font-size:12px">*Lower bound: speech recognition can drop “um” and “uh”. Session length ${r.durationMin} min.</p></div>
+    <div class="row"><button class="primary" id="homeBtn">Back to home</button></div>`;
+  $("homeBtn").addEventListener("click", () => { $("result").hidden = true; $("home").hidden = false; renderHome(); });
+  window.scrollTo({ top: 0 });
+}
+</script>
